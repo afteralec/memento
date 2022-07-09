@@ -2,7 +2,9 @@ use crate::session;
 use crate::{Id, Result};
 
 use std::collections::HashMap;
-use tokio::net;
+use tokio::{net, sync::mpsc};
+
+pub type StreamWriter = mpsc::UnboundedSender<String>;
 
 #[derive(Debug)]
 pub struct Server {

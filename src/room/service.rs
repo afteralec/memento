@@ -8,11 +8,12 @@ use tokio::sync::mpsc;
 
 pub type RoomServiceSender = mpsc::UnboundedSender<merchant::ResourceEvent<RoomBroker>>;
 pub type RoomServiceReceiver = mpsc::UnboundedReceiver<merchant::ResourceEvent<RoomBroker>>;
+pub type RoomService = merchant::ResourceBroker<RoomBroker>;
 pub type Rooms = HashMap<crate::Id, RoomBroker>;
 
 #[derive(Debug)]
 pub struct RoomServiceState {
-    rooms: Rooms,
+    room_brokers: Rooms,
 }
 
 impl RoomServiceState {
@@ -25,15 +26,16 @@ impl RoomServiceState {
 
                 (room.id(), RoomBroker::new(room_sender, Some(room_receiver)))
             })
-            .collect::<Vec<(Id, RoomBroker)>>();
+            .fold(Rooms::new(), |mut rooms, (room_id, room_broker)| {
+                rooms.insert(room_id, room_broker);
+                rooms
+            });
 
-        let rooms = Rooms::new();
-
-        RoomServiceState { rooms }
+        RoomServiceState { room_brokers }
     }
 
-    pub fn get_room_by_id(&self, id: &crate::Id) -> Option<&RoomBroker> {
-        self.rooms.get(id)
+    pub fn get_room_broker_by_id(&self, id: &crate::Id) -> Option<&RoomBroker> {
+        self.room_brokers.get(id)
     }
 }
 
@@ -54,7 +56,7 @@ impl merchant::MatcherMut<merchant::ResourceEvent<RoomBroker>> for RoomServiceMa
             merchant::ResourceEvent::Get(id, reply_sender) => {
                 let id = crate::Id(id);
 
-                if let Some(room_broker) = self.state.get_room_by_id(&id) {
+                if let Some(room_broker) = self.state.get_room_broker_by_id(&id) {
                     match reply_sender.send(merchant::ResourceEvent::GetSuccess(RoomBroker::new(
                         room_broker.sender(),
                         None,

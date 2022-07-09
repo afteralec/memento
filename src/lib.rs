@@ -1,10 +1,13 @@
 pub(crate) mod actor {
+    pub(crate) mod error;
     pub(crate) mod model;
     pub(crate) mod service;
+
+    pub use model::Actor;
 }
 
 pub(crate) mod delay {
-    pub(crate) mod broker;
+    pub(crate) mod state;
 }
 
 pub(crate) mod keywords {
@@ -14,11 +17,15 @@ pub(crate) mod keywords {
 }
 
 pub(crate) mod player {
+    pub(crate) mod error;
     pub(crate) mod model;
+
+    pub use model::Player;
 }
 
 pub(crate) mod room {
     pub(crate) mod broker;
+    pub(crate) mod delay;
     pub(crate) mod model;
     pub(crate) mod service;
 
@@ -32,11 +39,12 @@ pub(crate) mod session {
     pub(crate) mod broker;
     pub(crate) mod model;
 
-    pub(crate) use broker::SessionSender;
+    pub(crate) use broker::{SessionEvent, SessionSender};
 }
 
 use std::{error, result};
 
+pub use actor::Actor;
 pub(crate) use keywords::Keywords;
 pub use room::{Room, RoomEdges, RoomReceiver, RoomSender};
 pub use server::Server;
@@ -51,5 +59,7 @@ impl Id {
         Id(id)
     }
 
-    pub fn val(&self) -> u64 { self.0 }
+    pub fn val(&self) -> u64 {
+        self.0
+    }
 }

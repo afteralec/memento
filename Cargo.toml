@@ -12,3 +12,4 @@ tokio = { version = "1.19.2", features = ["net", "rt-multi-thread", "sync", "sig
 # tokio-stream = { version = "0.1" }
 
 tracing = "0.1"
+unique_id = "0.1.4"

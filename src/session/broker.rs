@@ -1,4 +1,4 @@
-use crate::room;
+use crate::{room, server};
 
 use merchant;
 use tokio::sync::mpsc;
@@ -9,14 +9,14 @@ pub enum SessionEvent {
 }
 
 pub type SessionSender = mpsc::UnboundedSender<SessionEvent>;
-pub type StreamWriter = mpsc::UnboundedSender<String>;
 
 pub type SessionBroker = merchant::StreamBroker<SessionEvent>;
 
 #[derive(Debug)]
 pub struct SessionState {
     room_sender: room::broker::RoomSender,
-    writer: StreamWriter,
+    writer: server::StreamWriter,
+    // @TODO: Action pool here
 }
 
 impl SessionState {

@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, default::Default};
 
 use crate::Id;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Keywords {
     pub ids_by_keyword: HashMap<String, Vec<Id>>,
     pub keywords_by_id: HashMap<Id, Vec<String>>,
@@ -12,9 +12,7 @@ pub struct Keywords {
 impl Keywords {
     pub fn new() -> Self {
         Keywords {
-            ids_by_keyword: HashMap::new(),
-            keywords_by_id: HashMap::new(),
-            sdesc_by_id: HashMap::new(),
+            ..Default::default()
         }
     }
 
@@ -93,5 +91,15 @@ impl Keywords {
 
     pub fn has_keyword(&mut self, keyword: &str) -> bool {
         self.ids_by_keyword.get(keyword).is_some()
+    }
+}
+
+impl Default for Keywords {
+    fn default() -> Self {
+        Keywords {
+            ids_by_keyword: HashMap::new(),
+            keywords_by_id: HashMap::new(),
+            sdesc_by_id: HashMap::new(),
+        }
     }
 }

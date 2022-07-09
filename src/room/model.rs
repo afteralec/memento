@@ -4,6 +4,16 @@ pub type RoomEdges<T> = [Option<T>; 12];
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct RoomSize(u8);
 
+impl RoomSize {
+    pub fn new(size: u8) -> Self {
+        if size > 4 {
+            panic!("attempted to create room with invalid size {}", size)
+        }
+
+        RoomSize(size)
+    }
+}
+
 #[derive(Debug)]
 pub struct Room {
     id: Id,
@@ -25,7 +35,7 @@ impl Room {
             id: Id(id),
             title: title.to_owned(),
             description: description.to_owned(),
-            size: RoomSize(size),
+            size: RoomSize::new(size),
             edges: [
                 make_id(edges[0]),
                 make_id(edges[1]),
@@ -45,6 +55,18 @@ impl Room {
 
     pub fn id(&self) -> Id {
         self.id
+    }
+
+    pub fn title(&self) -> String {
+        self.title.clone()
+    }
+
+    pub fn description(&self) -> String {
+        self.description.clone()
+    }
+
+    pub fn size(&self) -> RoomSize {
+        self.size
     }
 }
 
