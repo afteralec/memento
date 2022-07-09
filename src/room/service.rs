@@ -1,5 +1,7 @@
-use super::broker::{RoomSender, RoomReceiver, RoomBroker};
+use super::broker::{RoomBroker, RoomReceiver, RoomSender};
 use super::model::Room;
+use crate::Id;
+
 use merchant;
 use std::collections::HashMap;
 use tokio::sync::mpsc;
@@ -15,11 +17,15 @@ pub struct RoomServiceState {
 
 impl RoomServiceState {
     pub fn from_list(room_list: &[Room]) -> Self {
-        let room_brokers = room_list.into_iter().map(|room| {
-            let (room_sender, room_receiver): (RoomSender, RoomReceiver) = mpsc::unbounded_channel();
+        let room_brokers = room_list
+            .into_iter()
+            .map(|room| {
+                let (room_sender, room_receiver): (RoomSender, RoomReceiver) =
+                    mpsc::unbounded_channel();
 
-            (room.id(), RoomBroker::new(room_sender, Some(room_receiver)))
-        }).collect::<Vec<(i64, RoomBroker)>>();
+                (room.id(), RoomBroker::new(room_sender, Some(room_receiver)))
+            })
+            .collect::<Vec<(Id, RoomBroker)>>();
 
         let rooms = Rooms::new();
 

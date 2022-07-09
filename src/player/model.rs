@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use crate::Keywords;
 use crate::session;
 use crate::Id;
+use crate::Keywords;
 
 pub type Names = HashMap<Id, String>;
 

@@ -1,5 +1,6 @@
+use crate::Id;
+use super::model::{RoomSize, RoomEdges};
 use merchant;
-use super::model::RoomEdges;
 use tokio::sync::mpsc;
 
 #[derive(Debug)]
@@ -11,9 +12,10 @@ pub type RoomBroker = merchant::Broker<RoomEvent>;
 
 #[derive(Debug)]
 pub struct RoomState {
-    id: i64,
+    id: Id,
     title: String,
     description: String,
+    size: RoomSize,
     edges: RoomEdges<RoomSender>,
 }
 
