@@ -1,0 +1,81 @@
+use crate::room;
+
+use merchant;
+use tokio::sync::mpsc;
+
+#[derive(Debug)]
+pub enum SessionEvent {
+    NewRoomSender(room::broker::RoomSender),
+}
+
+pub type SessionSender = mpsc::UnboundedSender<SessionEvent>;
+pub type StreamWriter = mpsc::UnboundedSender<String>;
+
+pub type SessionBroker = merchant::StreamBroker<SessionEvent>;
+
+#[derive(Debug)]
+pub struct SessionState {
+    room_sender: room::broker::RoomSender,
+    writer: StreamWriter,
+}
+
+impl SessionState {
+    pub fn new(
+        room_sender: room::broker::RoomSender,
+        writer: mpsc::UnboundedSender<String>,
+    ) -> Self {
+        SessionState {
+            room_sender,
+            writer,
+        }
+    }
+
+    pub fn new_room_sender(&mut self, room_sender: room::broker::RoomSender) {
+        self.room_sender = room_sender;
+    }
+}
+
+#[derive(Debug)]
+pub struct SessionMatcher {
+    state: Box<SessionState>,
+}
+
+impl SessionMatcher {
+    pub fn new(state: Box<SessionState>) -> Self {
+        SessionMatcher { state }
+    }
+}
+
+impl merchant::MatcherMut<SessionEvent> for SessionMatcher {
+    fn match_on_mut(&mut self, event: SessionEvent) -> crate::Result<()> {
+        match event {
+            SessionEvent::NewRoomSender(room_sender) => {
+                self.state.new_room_sender(room_sender);
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct SessionStreamMatcher {
+    state: Box<SessionState>,
+}
+
+impl SessionStreamMatcher {
+    pub fn new(state: Box<SessionState>) -> Self {
+        SessionStreamMatcher { state }
+    }
+}
+
+impl merchant::MatcherMut<String> for SessionStreamMatcher {
+    fn match_on_mut(&mut self, input: String) -> crate::Result<()> {
+        match input {
+            _ => self
+                .state
+                .writer
+                .send("That isn't something you can do.".to_string())?,
+        }
+        Ok(())
+    }
+}
