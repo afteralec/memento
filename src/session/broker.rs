@@ -5,7 +5,7 @@ use tokio::sync::mpsc;
 
 #[derive(Debug)]
 pub enum SessionEvent {
-    NewRoomSender(room::broker::RoomSender),
+    NewRoomSender(room::RoomSender),
 }
 
 pub type SessionSender = mpsc::UnboundedSender<SessionEvent>;
@@ -14,23 +14,20 @@ pub type SessionBroker = merchant::StreamBroker<SessionEvent>;
 
 #[derive(Debug)]
 pub struct SessionState {
-    room_sender: room::broker::RoomSender,
+    room_sender: room::RoomSender,
     writer: server::StreamWriter,
     // @TODO: Action pool here
 }
 
 impl SessionState {
-    pub fn new(
-        room_sender: room::broker::RoomSender,
-        writer: mpsc::UnboundedSender<String>,
-    ) -> Self {
+    pub fn new(room_sender: room::RoomSender, writer: mpsc::UnboundedSender<String>) -> Self {
         SessionState {
             room_sender,
             writer,
         }
     }
 
-    pub fn new_room_sender(&mut self, room_sender: room::broker::RoomSender) {
+    pub fn new_room_sender(&mut self, room_sender: room::RoomSender) {
         self.room_sender = room_sender;
     }
 }

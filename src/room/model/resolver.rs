@@ -1,16 +1,41 @@
-use super::{
-    delay::RoomDelayState,
-    model::{Room, RoomEdges, RoomSize},
+use super::delay::RoomDelayState;
+use crate::{
+    actor, keywords, messaging, Id, Room, RoomEdges, RoomEvent, RoomSender, RoomSize,
 };
-use crate::{actor, keywords, messaging, Id, Result};
+use anyhow::Result;
 use std::{collections::HashMap, default::Default};
-use tokio::sync::mpsc;
 
 #[derive(Debug)]
-pub enum RoomEvent {}
+pub struct RoomResolver {
+    state: RoomState,
+}
 
-pub type RoomSender = mpsc::UnboundedSender<RoomEvent>;
-pub type RoomReceiver = mpsc::UnboundedReceiver<RoomEvent>;
+impl Default for RoomResolver {
+    fn default() -> Self {
+        RoomResolver {
+            state: RoomState::default(),
+        }
+    }
+}
+
+impl messaging::ResolverMut<RoomEvent> for RoomResolver {
+    fn resolve_on(&mut self, _event: RoomEvent) -> Result<()> {
+        Ok(())
+    }
+}
+
+impl RoomResolver {
+    pub fn new(room: &Room) -> Self {
+        RoomResolver {
+            state: RoomState::new(room),
+        }
+    }
+
+    pub fn replace_edges(&mut self, edges: RoomEdges<RoomSender>) {
+        self.state.replace_edges(edges);
+    }
+}
+
 pub type RoomActors = HashMap<Id, actor::Actor>;
 
 #[derive(Debug)]
@@ -88,36 +113,5 @@ impl Default for RoomState {
             delays: RoomDelayState::default(),
             actors: RoomActors::default(),
         }
-    }
-}
-
-#[derive(Debug)]
-pub struct RoomMatcher {
-    state: RoomState,
-}
-
-impl Default for RoomMatcher {
-    fn default() -> Self {
-        RoomMatcher {
-            state: RoomState::default(),
-        }
-    }
-}
-
-impl messaging::MatcherMut<RoomEvent> for RoomMatcher {
-    fn match_on(&mut self, _event: RoomEvent) -> Result<()> {
-        Ok(())
-    }
-}
-
-impl RoomMatcher {
-    pub fn new(room: &Room) -> Self {
-        RoomMatcher {
-            state: RoomState::new(room),
-        }
-    }
-
-    pub fn replace_edges(&mut self, edges: RoomEdges<RoomSender>) {
-        self.state.replace_edges(edges);
     }
 }

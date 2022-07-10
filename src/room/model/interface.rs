@@ -1,26 +1,11 @@
 use crate::{
-    messaging, messaging::Spawn, room::broker::RoomMatcher, Id, RoomReceiver, RoomSender,
+    messaging, messaging::Spawn, Id, RoomEdges, RoomError, RoomEvent, RoomResolver, RoomReceiver,
+    RoomSender, RoomSize,
 };
-use super::error::RoomError;
 
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
 use tokio::sync::mpsc;
-
-pub type RoomEdges<T> = [Option<T>; 12];
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct RoomSize(u8);
-
-impl RoomSize {
-    pub fn new(size: u8) -> Self {
-        if size > 4 {
-            panic!("attempted to create room with invalid size {}", size)
-        }
-
-        RoomSize(size)
-    }
-}
 
 #[derive(Debug)]
 pub struct Room {
@@ -31,24 +16,24 @@ pub struct Room {
     edges: RoomEdges<Id>,
     sender: RoomSender,
     receiver: Option<RoomReceiver>,
-    matcher: Option<RoomMatcher>,
+    resolver: Option<RoomResolver>,
 }
 
 impl Default for Room {
     fn default() -> Self {
-        let (room_sender, room_receiver) = mpsc::unbounded_channel();
+        let (room_sender, room_receiver) = mpsc::unbounded_channel::<RoomEvent>();
 
         Room {
-            id: Id(0),
+            id: Id::new(0),
             title: "Room Title".to_owned(),
             description: "This room has a long description.".to_owned(),
-            size: RoomSize(1),
+            size: RoomSize::new(1),
             edges: [
                 None, None, None, None, None, None, None, None, None, None, None, None,
             ],
             sender: room_sender,
             receiver: Some(room_receiver),
-            matcher: None,
+            resolver: None,
         }
     }
 }
@@ -91,7 +76,7 @@ impl Room {
     }
 
     fn generate_matcher(&mut self) {
-        let _ = self.matcher.insert(RoomMatcher::new(&self));
+        let _ = self.resolver.insert(RoomResolver::new(&self));
     }
 
     pub fn hydrate_edges(&mut self, rooms: &HashMap<Id, RoomSender>) {
@@ -115,7 +100,7 @@ impl Room {
             })
             .collect::<Vec<_>>();
 
-        if let Some(matcher) = &mut self.matcher {
+        if let Some(matcher) = &mut self.resolver {
             let edges_slice = &edge_senders[..];
 
             let edges = [
@@ -141,15 +126,17 @@ impl Room {
     where
         Self: Spawn,
     {
-        let matcher = self.matcher.take().ok_or_else(|| {
-            RoomError::NoMatcher(self.id)
-        })?;
+        let matcher = self
+            .resolver
+            .take()
+            .ok_or_else(|| RoomError::NoMatcher(self.id))?;
 
-        let receiver = self.receiver.take().ok_or_else(|| {
-            RoomError::NoReceiver(self.id)
-        })?;
+        let receiver = self
+            .receiver
+            .take()
+            .ok_or_else(|| RoomError::NoReceiver(self.id))?;
 
-        self.spawn_and_trace(messaging::match_receiver(receiver, matcher));
+        self.spawn_and_trace(messaging::resolve_receiver(receiver, matcher));
 
         Ok(())
     }

@@ -1,21 +1,31 @@
-use crate::Result;
-use std::fmt;
-use tokio::macros::support::Future;
+use anyhow::Result;
+use std::fmt::Debug;
+use tokio::{macros::support::Future, sync::mpsc};
 
-pub trait Matcher<T>
+pub trait Raise<T>
 where
-    T: 'static + Send + Sync + fmt::Debug,
+    T: 'static + Send + Sync + Debug,
 {
-    fn match_on(&self, event: T) -> Result<()>;
+    fn sender(&self) -> mpsc::UnboundedSender<T>;
+
+    fn raise(&self, event: T) -> Result<()>;
 }
 
-pub trait MatcherMut<T>
+pub trait Resolver<T>
 where
-    T: 'static + Send + Sync + fmt::Debug,
+    T: 'static + Send + Sync + Debug,
 {
-    fn match_on(&mut self, event: T) -> Result<()>;
+    fn resolve_on(&self, event: T) -> Result<()>;
 }
 
+pub trait ResolverMut<T>
+where
+    T: 'static + Send + Sync + Debug,
+{
+    fn resolve_on(&mut self, event: T) -> Result<()>;
+}
+
+// @TODO: Get these types to return the receiver out of the Future
 pub trait Spawn {
     fn spawn_and_trace<F>(&self, f: F) -> tokio::task::JoinHandle<()>
     where
@@ -23,7 +33,7 @@ pub trait Spawn {
     {
         tokio::spawn(async move {
             if let Err(err) = f.await {
-                tracing::error!(err);
+                tracing::error!("{:#?}", err);
             }
         })
     }
