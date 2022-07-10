@@ -37,7 +37,7 @@ impl ActorServiceMatcher {
 }
 
 impl merchant::MatcherMut<merchant::ResourceEvent<Actor>> for ActorServiceMatcher {
-    fn match_on_mut(&mut self, event: merchant::ResourceEvent<Actor>) -> merchant::Result<()> {
+    fn match_on(&mut self, event: merchant::ResourceEvent<Actor>) -> merchant::Result<()> {
         match event {
             merchant::ResourceEvent::Get(id, reply_sender) => {
                 let id = crate::Id(id);

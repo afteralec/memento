@@ -1,7 +1,9 @@
-use super::{delay::RoomDelayState, model::{Room, RoomEdges, RoomSize}};
-use crate::{actor, keywords, Id};
-use merchant;
-use std::collections::HashMap;
+use super::{
+    delay::RoomDelayState,
+    model::{Room, RoomEdges, RoomSize},
+};
+use crate::{actor, keywords, messaging, Id, Result};
+use std::{collections::HashMap, default::Default};
 use tokio::sync::mpsc;
 
 #[derive(Debug)]
@@ -9,7 +11,6 @@ pub enum RoomEvent {}
 
 pub type RoomSender = mpsc::UnboundedSender<RoomEvent>;
 pub type RoomReceiver = mpsc::UnboundedReceiver<RoomEvent>;
-pub type RoomBroker = merchant::Broker<RoomEvent>;
 pub type RoomActors = HashMap<Id, actor::Actor>;
 
 #[derive(Debug)]
@@ -24,25 +25,8 @@ pub struct RoomState {
     actors: RoomActors,
 }
 
-impl std::default::Default for RoomState {
-    fn default() -> Self {
-        RoomState {
-            id: Id(0),
-            title: "Room Title".to_owned(),
-            description: "This room has a description".to_owned(),
-            size: RoomSize::new(1),
-            edges: [
-                None, None, None, None, None, None, None, None, None, None, None, None,
-            ],
-            keywords: keywords::Keywords::default(),
-            delays: RoomDelayState::default(),
-            actors: RoomActors::default(),
-        }
-    }
-}
-
 impl RoomState {
-    pub fn from_room(room: Room) -> Self {
+    pub fn new(room: &Room) -> Self {
         RoomState {
             id: room.id(),
             title: room.title(),
@@ -84,6 +68,27 @@ impl RoomState {
 
         self.edges[*edge_index] = edge.clone()
     }
+
+    pub fn id(&self) -> Id {
+        self.id
+    }
+}
+
+impl Default for RoomState {
+    fn default() -> Self {
+        RoomState {
+            id: Id(0),
+            title: "Room Title".to_owned(),
+            description: "This room has a description".to_owned(),
+            size: RoomSize::new(1),
+            edges: [
+                None, None, None, None, None, None, None, None, None, None, None, None,
+            ],
+            keywords: keywords::Keywords::default(),
+            delays: RoomDelayState::default(),
+            actors: RoomActors::default(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -91,8 +96,28 @@ pub struct RoomMatcher {
     state: RoomState,
 }
 
-impl merchant::MatcherMut<RoomEvent> for RoomMatcher {
-    fn match_on_mut(&mut self, event: RoomEvent) -> merchant::Result<()> {
+impl Default for RoomMatcher {
+    fn default() -> Self {
+        RoomMatcher {
+            state: RoomState::default(),
+        }
+    }
+}
+
+impl messaging::MatcherMut<RoomEvent> for RoomMatcher {
+    fn match_on(&mut self, _event: RoomEvent) -> Result<()> {
         Ok(())
+    }
+}
+
+impl RoomMatcher {
+    pub fn new(room: &Room) -> Self {
+        RoomMatcher {
+            state: RoomState::new(room),
+        }
+    }
+
+    pub fn replace_edges(&mut self, edges: RoomEdges<RoomSender>) {
+        self.state.replace_edges(edges);
     }
 }

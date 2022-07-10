@@ -47,7 +47,7 @@ impl SessionMatcher {
 }
 
 impl merchant::MatcherMut<SessionEvent> for SessionMatcher {
-    fn match_on_mut(&mut self, event: SessionEvent) -> crate::Result<()> {
+    fn match_on(&mut self, event: SessionEvent) -> crate::Result<()> {
         match event {
             SessionEvent::NewRoomSender(room_sender) => {
                 self.state.new_room_sender(room_sender);
@@ -69,7 +69,7 @@ impl SessionStreamMatcher {
 }
 
 impl merchant::MatcherMut<String> for SessionStreamMatcher {
-    fn match_on_mut(&mut self, input: String) -> crate::Result<()> {
+    fn match_on(&mut self, input: String) -> crate::Result<()> {
         match input {
             _ => self
                 .state

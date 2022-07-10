@@ -11,9 +11,17 @@ pub(crate) mod delay {
 }
 
 pub(crate) mod keywords {
-    pub(crate) mod model;
+    pub(crate) mod util;
 
-    pub(crate) use model::Keywords;
+    pub(crate) use util::Keywords;
+}
+
+pub(crate) mod messaging {
+    pub(crate) mod functions;
+    pub(crate) mod traits;
+
+    pub(crate) use functions::match_receiver;
+    pub(crate) use traits::{MatcherMut, Spawn};
 }
 
 pub(crate) mod player {
@@ -26,11 +34,14 @@ pub(crate) mod player {
 pub(crate) mod room {
     pub(crate) mod broker;
     pub(crate) mod delay;
+    pub(crate) mod error;
     pub(crate) mod model;
+    pub(crate) mod resource;
     pub(crate) mod service;
 
     pub use broker::{RoomReceiver, RoomSender};
     pub use model::{Room, RoomEdges};
+    pub use resource::RoomResource;
 }
 
 pub(crate) mod server;
@@ -42,11 +53,10 @@ pub(crate) mod session {
     pub(crate) use broker::{SessionEvent, SessionSender};
 }
 
-use std::{error, result};
+use std::{error, fmt, result};
 
 pub use actor::Actor;
-pub(crate) use keywords::Keywords;
-pub use room::{Room, RoomEdges, RoomReceiver, RoomSender};
+pub use room::{Room, RoomEdges, RoomReceiver, RoomResource, RoomSender};
 pub use server::Server;
 
 pub type Result<T> = result::Result<T, Box<dyn error::Error>>;
@@ -63,3 +73,11 @@ impl Id {
         self.0
     }
 }
+
+impl fmt::Display for Id {
+    fn fmt(&self, f: &mut fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+// @TODO: Add `thiserror` and `anyhow` crates for error and Result handling

@@ -31,4 +31,5 @@ impl std::error::Error for PlayerError {}
 pub enum PlayerErrorKind {
     NoWriter,
     NoSessionSender,
+    AlreadyAssigned,
 }

@@ -34,6 +34,9 @@ impl RoomDelayState {
 
 impl Default for RoomDelayState {
     fn default() -> Self {
-        RoomDelayState { id_generator: sequence::SequenceGenerator::default(), delays: RoomDelays::new() }
+        RoomDelayState {
+            id_generator: sequence::SequenceGenerator::default(),
+            delays: RoomDelays::new(),
+        }
     }
 }

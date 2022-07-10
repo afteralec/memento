@@ -34,6 +34,9 @@ impl DelayState {
 
 impl Default for DelayState {
     fn default() -> Self {
-        DelayState { id_generator: sequence::SequenceGenerator::default(), delays: Delays::new() }
+        DelayState {
+            id_generator: sequence::SequenceGenerator::default(),
+            delays: Delays::new(),
+        }
     }
 }
