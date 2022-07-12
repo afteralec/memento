@@ -1,7 +1,10 @@
 pub(crate) mod actor {
-    pub(crate) mod error;
-    pub(crate) mod model;
-    pub(crate) mod service;
+    pub(crate) mod model {
+        pub(crate) mod error;
+        pub(crate) mod interface;
+
+        pub use interface::Actor;
+    }
 
     pub use model::Actor;
 }
@@ -41,8 +44,12 @@ pub(crate) mod messaging {
 }
 
 pub(crate) mod player {
-    pub(crate) mod error;
-    pub(crate) mod model;
+    pub(crate) mod model {
+        pub(crate) mod error;
+        pub(crate) mod interface;
+
+        pub use interface::Player;
+    }
 
     pub use model::Player;
 }
