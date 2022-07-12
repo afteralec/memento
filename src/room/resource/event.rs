@@ -16,6 +16,6 @@ pub enum RoomResourceEvent {
 pub enum RoomResourceReplyEvent {
     #[error("RoomResourceReply::GotRoomById raised with id {0} but channel is closed")]
     GotRoomById(Id, Room),
-    #[error("RoomResourceReply::RoomNotFound raised with id {0} but channel is closed")]
-    RoomNotFound(Id),
+    #[error("RoomResourceReply::NoRoomAtId raised with id {0} but channel is closed")]
+    NoRoomAtId(Id),
 }

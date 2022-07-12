@@ -13,7 +13,7 @@ pub struct Actor {
 
 impl Actor {
     pub fn new(id: u64, gender: &str, short_description: &str, keywords: &Vec<String>) -> Self {
-        let gender = match gender {
+        let gender = match &gender.to_lowercase()[..] {
             "nonbinary" => Gender::NonBinary,
             "male" => Gender::Male,
             "female" => Gender::Female,

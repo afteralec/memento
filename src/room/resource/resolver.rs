@@ -24,7 +24,7 @@ impl messaging::ResolverMut<RoomResourceEvent> for RoomResourceResolver {
                 if let Some(room) = self.state.rooms.get(&id) {
                     reply_sender.send(RoomResourceReplyEvent::GotRoomById(id, room.clone()))?;
                 } else {
-                    reply_sender.send(RoomResourceReplyEvent::RoomNotFound(id))?;
+                    reply_sender.send(RoomResourceReplyEvent::NoRoomAtId(id))?;
                 }
 
                 Ok(())
@@ -56,11 +56,11 @@ impl Default for RoomResourceState {
 
 impl RoomResourceState {
     pub fn new(room_iter: impl Iterator<Item = Room>) -> Self {
-        let mut rooms = HashMap::new();
-
-        for room in room_iter {
+        let mut rooms = room_iter.fold(HashMap::new(), |mut rooms, room| {
             rooms.insert(room.id(), room);
-        }
+
+            rooms
+        });
 
         let mut room_resource_state = RoomResourceState {
             rooms,

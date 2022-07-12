@@ -6,6 +6,20 @@ pub(crate) mod actor {
         pub use interface::Actor;
     }
 
+    pub(crate) mod resource {
+        pub(crate) mod error;
+        pub(crate) mod event;
+        pub(crate) mod interface;
+        pub(crate) mod resolver;
+        pub(crate) mod types;
+
+        pub use super::Actor;
+        pub(crate) use error::ActorResourceError;
+        pub(crate) use event::{ActorResourceEvent, ActorResourceReplyEvent};
+        pub(crate) use resolver::ActorResourceResolver;
+        pub(crate) use types::{ActorResourceReceiver, ActorResourceSender};
+    }
+
     pub use model::Actor;
 }
 
@@ -21,7 +35,9 @@ pub(crate) mod auth {
         pub(crate) use event::AuthResourceEvent;
         pub(crate) use interface::AuthResource;
         pub(crate) use resolver::AuthResourceResolver;
-        pub(crate) use types::{AuthResourceReceiver, AuthResourceSender};
+        pub(crate) use types::{
+            AuthRequest, AuthResourceReceiver, AuthResourceSender, AuthResponse, Credential,
+        };
     }
 }
 
@@ -49,6 +65,19 @@ pub(crate) mod player {
         pub(crate) mod interface;
 
         pub use interface::Player;
+    }
+
+    pub(crate) mod resource {
+        pub(crate) mod error;
+        pub(crate) mod event;
+        pub(crate) mod interface;
+        pub(crate) mod resolver;
+        pub(crate) mod types;
+
+        pub(crate) use super::Player;
+        pub(crate) use event::{PlayerResourceEvent, PlayerResourceReplyEvent};
+        pub(crate) use resolver::PlayerResourceResolver;
+        pub(crate) use types::{PlayerResourceReceiver, PlayerResourceSender};
     }
 
     pub use model::Player;
