@@ -27,6 +27,8 @@ where
 
 // @TODO: Get these types to return the receiver out of the Future
 pub trait Spawn {
+    fn spawn(&mut self) -> Result<()>;
+
     fn spawn_and_trace<F>(&self, f: F) -> tokio::task::JoinHandle<()>
     where
         F: Future<Output = Result<()>> + Send + 'static,

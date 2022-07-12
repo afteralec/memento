@@ -1,7 +1,8 @@
-use std::collections::HashMap;
-
 use super::error;
-use crate::{keywords, server, session, Id, Result};
+use crate::{keywords, server, session, Id};
+
+use anyhow::{Error, Result};
+use std::collections::HashMap;
 
 pub type Names = HashMap<Id, String>;
 
@@ -22,9 +23,8 @@ impl Player {
 
     pub fn assign_ownership(&mut self, id: &Id) -> Result<()> {
         if let Some(owned_id) = &self.owns {
-            Err(Box::new(error::PlayerError::new(
-                error::PlayerErrorKind::AlreadyAssigned,
-                &format!("attempted to assign ownership of actor id {} to player id {}, but already owns actor id {}", id.val(), self.id.val(), owned_id.val())
+            Err(Error::new(error::PlayerError::AlreadyAssigned(
+                self.id, *id, *owned_id,
             )))
         } else {
             let _ = self.owns.insert(*id);
@@ -38,10 +38,7 @@ impl Player {
 
             Ok(())
         } else {
-            Err(Box::new(error::PlayerError::new(
-                error::PlayerErrorKind::NoWriter,
-                &format!("no writer available for player {}", self.id.val()),
-            )))
+            Err(Error::new(error::PlayerError::NoWriter(self.id)))
         }
     }
 
@@ -51,10 +48,7 @@ impl Player {
 
             Ok(())
         } else {
-            Err(Box::new(error::PlayerError::new(
-                error::PlayerErrorKind::NoSessionSender,
-                &format!("no session sender available for player {}", self.id.val()),
-            )))
+            Err(Error::new(error::PlayerError::NoSessionSender(self.id)))
         }
     }
 

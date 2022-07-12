@@ -1,5 +1,6 @@
 use crate::session;
-use crate::{Id, Result};
+use crate::Id;
+use anyhow::Result;
 
 use std::collections::HashMap;
 use tokio::{net, sync::mpsc};
@@ -32,7 +33,7 @@ impl Server {
         tokio::spawn(async move {
             if let Err(err) = listen(addr).await {
                 // @TODO: Error handling
-                tracing::error!(err);
+                tracing::error!("{:?}", err);
             }
         });
     }

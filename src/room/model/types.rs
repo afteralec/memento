@@ -1,11 +1,8 @@
-use super::{RoomEvent, RoomResourceEvent};
+use super::event::RoomEvent;
 use tokio::sync::mpsc;
 
 pub type RoomSender = mpsc::UnboundedSender<RoomEvent>;
 pub type RoomReceiver = mpsc::UnboundedReceiver<RoomEvent>;
-
-pub type RoomResourceSender = mpsc::UnboundedSender<RoomResourceEvent>;
-pub type RoomResourceReceiver = mpsc::UnboundedReceiver<RoomResourceEvent>;
 
 pub type RoomEdges<T> = [Option<T>; 12];
 

@@ -1,7 +1,5 @@
 use super::delay::RoomDelayState;
-use crate::{
-    actor, keywords, messaging, Id, Room, RoomEdges, RoomEvent, RoomSender, RoomSize,
-};
+use crate::{actor, keywords, messaging, Id, Room, RoomEdges, RoomEvent, RoomSender, RoomSize};
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
 

@@ -1,5 +1,6 @@
 use super::error;
-use crate::{player, session, Id, Result};
+use crate::{player, session, Id};
+use anyhow::{Error, Result};
 
 #[derive(Debug, Clone)]
 pub struct Actor {
@@ -71,18 +72,15 @@ impl Actor {
         self.keywords.iter()
     }
 
-    pub fn attach_player(&mut self, player: player::Player) -> Result<()> {
-        if self.player.is_some() {
-            Err(Box::new(error::ActorError::new(
-                error::ActorErrorKind::PlayerAlreadyAttached,
-                &format!(
-                    "attempted to attach player to actor id {}, but player {} is already attached",
-                    self.id.val(),
-                    player.id().val()
-                ),
+    pub fn attach_player(&mut self, player: &player::Player) -> Result<()> {
+        if let Some(assigned_player) = &self.player {
+            Err(Error::new(error::ActorError::PlayerAlreadyAttached(
+                self.id,
+                player.id(),
+                assigned_player.id(),
             )))
         } else {
-            let _ = self.player.insert(player);
+            let _ = self.player.insert(player.clone());
 
             Ok(())
         }
@@ -98,10 +96,7 @@ impl Actor {
 
             Ok(())
         } else {
-            Err(Box::new(error::ActorError::new(
-                error::ActorErrorKind::NoPlayer,
-                &format!("actor {} has no player attached", &self.id.val()),
-            )))
+            Err(Error::new(error::ActorError::NoPlayer(self.id)))
         }
     }
 
@@ -111,10 +106,7 @@ impl Actor {
 
             Ok(())
         } else {
-            Err(Box::new(error::ActorError::new(
-                error::ActorErrorKind::NoPlayer,
-                &format!("actor {} has no player attached", &self.id.val()),
-            )))
+            Err(Error::new(error::ActorError::NoPlayer(self.id)))
         }
     }
 }

@@ -3,19 +3,19 @@ use anyhow::Result;
 use std::fmt;
 use tokio::sync::mpsc;
 
-pub async fn resolve_receiver<T, M>(
+pub async fn resolve_receiver<T, R>(
     mut receiver: mpsc::UnboundedReceiver<T>,
-    mut matcher: M,
+    mut resolver: R,
 ) -> Result<()>
 where
     T: 'static + Send + Sync + fmt::Debug,
-    M: 'static + Send + Sync + fmt::Debug + ResolverMut<T>,
+    R: 'static + Send + Sync + fmt::Debug + ResolverMut<T>,
 {
     while let Some(event) = receiver.recv().await {
-        matcher.resolve_on(event)?;
+        resolver.resolve_on(event)?;
     }
 
-    //@TODO: Figure out how to reattach this receiver to the Room struct
+    //@TODO: Figure out how to reattach this receiver to the spawning struct
 
     Ok(())
 }

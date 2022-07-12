@@ -1,7 +1,5 @@
-use crate::{
-    messaging, messaging::Spawn, Id, RoomEdges, RoomError, RoomEvent, RoomResolver, RoomReceiver,
-    RoomSender, RoomSize,
-};
+use super::{RoomEdges, RoomError, RoomEvent, RoomReceiver, RoomResolver, RoomSender, RoomSize};
+use crate::{messaging, messaging::Spawn, Id};
 
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
@@ -38,7 +36,38 @@ impl Default for Room {
     }
 }
 
-impl Spawn for Room {}
+impl Clone for Room {
+    fn clone(&self) -> Self {
+        Room {
+            id: self.id,
+            title: self.title.clone(),
+            description: self.description.clone(),
+            size: self.size,
+            edges: self.edges,
+            sender: self.sender.clone(),
+            receiver: None,
+            resolver: None,
+        }
+    }
+}
+
+impl Spawn for Room {
+    fn spawn(&mut self) -> Result<()> {
+        let resolver = self
+            .resolver
+            .take()
+            .ok_or_else(|| RoomError::NoResolver(self.id))?;
+
+        let receiver = self
+            .receiver
+            .take()
+            .ok_or_else(|| RoomError::NoReceiver(self.id))?;
+
+        self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+
+        Ok(())
+    }
+}
 
 impl Room {
     pub fn new(
@@ -120,25 +149,6 @@ impl Room {
 
             matcher.replace_edges(edges);
         }
-    }
-
-    pub fn spawn(&mut self) -> Result<()>
-    where
-        Self: Spawn,
-    {
-        let matcher = self
-            .resolver
-            .take()
-            .ok_or_else(|| RoomError::NoMatcher(self.id))?;
-
-        let receiver = self
-            .receiver
-            .take()
-            .ok_or_else(|| RoomError::NoReceiver(self.id))?;
-
-        self.spawn_and_trace(messaging::resolve_receiver(receiver, matcher));
-
-        Ok(())
     }
 
     pub fn id(&self) -> Id {

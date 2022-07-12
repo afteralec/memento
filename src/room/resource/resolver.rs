@@ -1,5 +1,5 @@
+use super::{RoomResourceEvent, RoomResourceReplyEvent};
 use crate::{messaging, Id, Room};
-use super::RoomResourceEvent;
 
 use anyhow::Result;
 use std::{collections::HashMap, default::Default, iter::Iterator};
@@ -18,8 +18,18 @@ impl Default for RoomResourceResolver {
 }
 
 impl messaging::ResolverMut<RoomResourceEvent> for RoomResourceResolver {
-    fn resolve_on(&mut self, _event: RoomResourceEvent) -> Result<()> {
-        Ok(())
+    fn resolve_on(&mut self, event: RoomResourceEvent) -> Result<()> {
+        match event {
+            RoomResourceEvent::GetRoomById { id, reply_sender } => {
+                if let Some(room) = self.state.rooms.get(&id) {
+                    reply_sender.send(RoomResourceReplyEvent::GotRoomById(id, room.clone()))?;
+                } else {
+                    reply_sender.send(RoomResourceReplyEvent::RoomNotFound(id))?;
+                }
+
+                Ok(())
+            }
+        }
     }
 }
 

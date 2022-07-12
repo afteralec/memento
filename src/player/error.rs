@@ -1,35 +1,12 @@
-use std::fmt;
+use crate::Id;
+use thiserror::Error;
 
-#[derive(Debug)]
-pub struct PlayerError {
-    kind: PlayerErrorKind,
-    message: String,
-}
-
-impl PlayerError {
-    pub fn new(kind: PlayerErrorKind, message: &str) -> Self {
-        PlayerError {
-            kind,
-            message: message.to_owned(),
-        }
-    }
-
-    pub fn kind(&self) -> PlayerErrorKind {
-        self.kind
-    }
-}
-
-impl fmt::Display for PlayerError {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(fmt, "{:?}:{}", self.kind, self.message)
-    }
-}
-
-impl std::error::Error for PlayerError {}
-
-#[derive(Debug, Clone, Copy)]
-pub enum PlayerErrorKind {
-    NoWriter,
-    NoSessionSender,
-    AlreadyAssigned,
+#[derive(Debug, Clone, Copy, Error)]
+pub enum PlayerError {
+    #[error("attempted a write to player {0}, but there is no writer attached")]
+    NoWriter(Id),
+    #[error("attempted to send to player {0}'s session, but there is no session sender attached")]
+    NoSessionSender(Id),
+    #[error("attempted to assign ownership of {1} to player {0}, but already owns {2}")]
+    AlreadyAssigned(Id, Id, Id),
 }

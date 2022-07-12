@@ -1,34 +1,10 @@
-use std::fmt;
+use crate::Id;
+use thiserror::Error;
 
-#[derive(Debug)]
-pub struct ActorError {
-    kind: ActorErrorKind,
-    message: String,
-}
-
-impl ActorError {
-    pub fn new(kind: ActorErrorKind, message: &str) -> Self {
-        ActorError {
-            kind,
-            message: message.to_owned(),
-        }
-    }
-
-    pub fn kind(&self) -> ActorErrorKind {
-        self.kind
-    }
-}
-
-impl fmt::Display for ActorError {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(fmt, "{:?}:{}", self.kind, self.message)
-    }
-}
-
-impl std::error::Error for ActorError {}
-
-#[derive(Debug, Clone, Copy)]
-pub enum ActorErrorKind {
-    NoPlayer,
-    PlayerAlreadyAttached,
+#[derive(Debug, Clone, Copy, Error)]
+pub enum ActorError {
+    #[error("attempted to access player for actor {0}, but no player attached")]
+    NoPlayer(Id),
+    #[error("attempted to attach player {1} to actor {0}, but player {2} already attached")]
+    PlayerAlreadyAttached(Id, Id, Id),
 }

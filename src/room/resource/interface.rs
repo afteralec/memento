@@ -1,6 +1,9 @@
-use crate::{messaging::Spawn, Room};
-use super::{RoomResourceSender, RoomResourceReceiver, RoomResourceResolver};
+use super::{
+    Room, RoomResourceError, RoomResourceReceiver, RoomResourceResolver, RoomResourceSender,
+};
+use crate::{messaging, messaging::Spawn};
 
+use anyhow::Result;
 use std::default::Default;
 use tokio::sync::mpsc;
 
@@ -13,17 +16,33 @@ pub struct RoomResource {
 
 impl Default for RoomResource {
     fn default() -> Self {
-        let (room_resource_sender, room_resource_receiver) = mpsc::unbounded_channel();
+        let (sender, receiver) = mpsc::unbounded_channel();
 
         RoomResource {
-            sender: room_resource_sender,
-            receiver: Some(room_resource_receiver),
+            sender,
+            receiver: Some(receiver),
             resolver: Some(RoomResourceResolver::default()),
         }
     }
 }
 
-impl Spawn for RoomResource {}
+impl Spawn for RoomResource {
+    fn spawn(&mut self) -> Result<()> {
+        let resolver = self
+            .resolver
+            .take()
+            .ok_or_else(|| RoomResourceError::NoResolver)?;
+
+        let receiver = self
+            .receiver
+            .take()
+            .ok_or_else(|| RoomResourceError::NoReceiver)?;
+
+        self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+
+        Ok(())
+    }
+}
 
 impl RoomResource {
     pub fn new(room_iter: impl Iterator<Item = Room>) -> Self {
