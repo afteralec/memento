@@ -1,8 +1,7 @@
 use super::error;
-use crate::{keywords, server, session, Id};
-
+use crate::{keywords::Keywords, server, session, Id};
 use anyhow::{Error, Result};
-use std::collections::HashMap;
+use std::{collections::HashMap, default::Default};
 
 pub type Names = HashMap<Id, String>;
 
@@ -10,13 +9,33 @@ pub type Names = HashMap<Id, String>;
 pub struct Player {
     id: Id,
     names: Names,
-    keywords: keywords::Keywords,
+    keywords: Keywords,
     owns: Option<Id>,
     writer: Option<server::StreamWriter>,
     session_sender: Option<session::SessionSender>,
 }
 
+impl Default for Player {
+    fn default() -> Self {
+        Player {
+            id: Id::new(0),
+            names: Names::default(),
+            keywords: Keywords::default(),
+            owns: None,
+            writer: None,
+            session_sender: None,
+        }
+    }
+}
+
 impl Player {
+    pub fn new(id: u64) -> Self {
+        Player {
+            id: Id::new(id),
+            ..Default::default()
+        }
+    }
+
     pub fn id(&self) -> Id {
         self.id
     }

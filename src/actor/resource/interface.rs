@@ -1,5 +1,5 @@
 use super::{
-    ActorResourceError, ActorResourceReceiver, ActorResourceResolver, ActorResourceSender,
+    Actor, ActorResourceError, ActorResourceReceiver, ActorResourceResolver, ActorResourceSender,
 };
 use crate::{messaging, messaging::Spawn};
 use anyhow::Result;
@@ -44,8 +44,9 @@ impl Spawn for ActorResource {
 }
 
 impl ActorResource {
-    pub fn new() -> Self {
+    pub fn new(actor_iter: impl Iterator<Item = Actor>) -> Self {
         ActorResource {
+            resolver: Some(ActorResourceResolver::new(actor_iter)),
             ..Default::default()
         }
     }

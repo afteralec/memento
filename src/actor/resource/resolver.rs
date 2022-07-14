@@ -32,6 +32,15 @@ impl ResolverMut<ActorResourceEvent> for ActorResourceResolver {
     }
 }
 
+impl ActorResourceResolver {
+    pub fn new(actor_iter: impl Iterator<Item = Actor>) -> Self {
+        ActorResourceResolver {
+            state: ActorResourceState::new(actor_iter),
+            ..Default::default()
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ActorResourceState {
     actors: HashMap<Id, Actor>,

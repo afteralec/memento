@@ -1,5 +1,17 @@
+use std::net::SocketAddr;
+use tokio::net::TcpStream;
+use tokio_util::codec::{Framed, LinesCodec};
+
+use crate::Credential;
+
 #[derive(Debug)]
-pub enum SessionResourceEvent {}
+pub enum SessionResourceEvent {
+    NewSession {
+        lines: Framed<TcpStream, LinesCodec>,
+        addr: SocketAddr,
+        credential: Credential,
+    },
+}
 
 #[derive(Debug)]
 pub enum SessionResourceReplyEvent {}

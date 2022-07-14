@@ -16,29 +16,41 @@ pub(crate) mod actor {
         pub use super::Actor;
         pub(crate) use error::ActorResourceError;
         pub(crate) use event::{ActorResourceEvent, ActorResourceReplyEvent};
+        pub use interface::ActorResource;
         pub(crate) use resolver::ActorResourceResolver;
-        pub(crate) use types::{ActorResourceReceiver, ActorResourceSender};
+        pub use types::{ActorResourceReceiver, ActorResourceSender};
     }
 
     pub use model::Actor;
+    pub use resource::{ActorResource, ActorResourceSender};
 }
 
 pub(crate) mod auth {
     pub(crate) mod resource {
+        pub(crate) mod client;
         pub(crate) mod error;
         pub(crate) mod event;
         pub(crate) mod interface;
         pub(crate) mod resolver;
         pub(crate) mod types;
 
+        pub use client::AuthClient;
         pub(crate) use error::AuthResourceError;
-        pub(crate) use event::AuthResourceEvent;
-        pub(crate) use interface::AuthResource;
+        pub use event::{
+            AuthRequest, AuthResourceEvent, AuthResourceReplyEvent, AuthResponse, Credential,
+        };
+        pub use interface::AuthResource;
         pub(crate) use resolver::AuthResourceResolver;
-        pub(crate) use types::{
-            AuthRequest, AuthResourceReceiver, AuthResourceSender, AuthResponse, Credential,
+        pub use types::{
+            AuthResourceReceiver, AuthResourceReplyReceiver, AuthResourceReplySender,
+            AuthResourceSender,
         };
     }
+
+    pub use resource::{
+        AuthClient, AuthRequest, AuthResource, AuthResourceEvent, AuthResourceReplyEvent,
+        AuthResourceSender, AuthResourceReplyReceiver, AuthResponse, Credential,
+    };
 }
 
 pub(crate) mod delay {
@@ -75,12 +87,15 @@ pub(crate) mod player {
         pub(crate) mod types;
 
         pub(crate) use super::Player;
+        pub(crate) use error::PlayerResourceError;
         pub(crate) use event::{PlayerResourceEvent, PlayerResourceReplyEvent};
+        pub use interface::PlayerResource;
         pub(crate) use resolver::PlayerResourceResolver;
-        pub(crate) use types::{PlayerResourceReceiver, PlayerResourceSender};
+        pub use types::{PlayerResourceReceiver, PlayerResourceSender};
     }
 
     pub use model::Player;
+    pub use resource::{PlayerResource, PlayerResourceSender};
 }
 
 pub(crate) mod room {
@@ -134,37 +149,51 @@ pub(crate) mod session {
         pub(crate) mod types;
 
         pub(crate) use error::SessionError;
-        pub(crate) use event::SessionEvent;
-        pub(crate) use resolver::SessionResolver;
-        pub(crate) use types::{SessionReceiver, SessionSender};
+        pub use event::SessionEvent;
+        pub use interface::Session;
+        pub use resolver::SessionResolver;
+        pub use types::{SessionReceiver, SessionSender};
     }
 
     pub(crate) mod resource {
         pub(crate) mod error;
         pub(crate) mod event;
+        pub(crate) mod functions {
+            pub mod error;
+            pub mod steps;
+
+            pub use steps::auth_step;
+        }
         pub(crate) mod interface;
         pub(crate) mod resolver;
         pub(crate) mod types;
 
-        pub(crate) use event::SessionResourceEvent;
-        pub(crate) use resolver::SessionResourceResolver;
-        pub(crate) use types::{SessionResourceReceiver, SessionResourceSender};
+        pub use super::Session;
+        pub use error::SessionResourceError;
+        pub use event::SessionResourceEvent;
+        pub use interface::SessionResource;
+        pub use functions::auth_step;
+        pub use resolver::SessionResourceResolver;
+        pub use types::{SessionResourceReceiver, SessionResourceSender};
     }
 
-    pub(crate) use model::{SessionEvent, SessionReceiver, SessionSender};
-    pub(crate) use resource::{
-        SessionResourceEvent, SessionResourceReceiver, SessionResourceSender,
+    pub use model::{Session, SessionEvent, SessionReceiver, SessionSender};
+    pub use resource::{
+        SessionResource, SessionResourceEvent, SessionResourceReceiver, SessionResourceSender,
     };
 }
 
 use std::fmt::{Display, Formatter, Result};
 
-pub use actor::Actor;
+pub use actor::{Actor, ActorResource, ActorResourceSender};
+pub use auth::{AuthClient, AuthResource, AuthResourceSender, AuthResponse, Credential};
+pub use player::{Player, PlayerResource, PlayerResourceSender};
 pub use room::{
-    Room, RoomEdges, RoomError, RoomEvent, RoomReceiver, RoomResolver, RoomResource, RoomSender,
+    Room, RoomEdges, RoomError, RoomEvent, RoomReceiver, RoomResolver, RoomResource, RoomResourceSender, RoomSender,
     RoomSize,
 };
 pub use server::Server;
+pub use session::{SessionResource, SessionResourceEvent, SessionResourceSender};
 
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct Id(u64);

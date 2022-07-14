@@ -1,20 +1,9 @@
-use super::AuthResourceEvent;
-use tokio::sync::mpsc;
+use super::{AuthResourceEvent, AuthResourceReplyEvent};
+use crate::Id;
+use tokio::sync::{mpsc, oneshot};
 
 pub type AuthResourceSender = mpsc::UnboundedSender<AuthResourceEvent>;
 pub type AuthResourceReceiver = mpsc::UnboundedReceiver<AuthResourceEvent>;
 
-#[derive(Debug)]
-pub enum AuthRequest {
-    WithCredential(Credential),
-}
-
-#[derive(Debug)]
-pub enum Credential {
-    UserNameAndPassword(String, String),
-}
-
-pub enum AuthResponse {
-    Authenticated,
-    Forbidden,
-}
+pub type AuthResourceReplySender = oneshot::Sender<AuthResourceReplyEvent>;
+pub type AuthResourceReplyReceiver = oneshot::Receiver<AuthResourceReplyEvent>;

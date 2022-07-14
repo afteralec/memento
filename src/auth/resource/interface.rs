@@ -1,18 +1,27 @@
-use super::{AuthResourceError, AuthResourceReceiver, AuthResourceResolver, AuthResourceSender};
+use super::{
+    AuthClient, AuthResourceError, AuthResourceEvent, AuthResourceReceiver, AuthResourceResolver,
+    AuthResourceSender,
+};
 use crate::{messaging, messaging::Spawn};
 
 use anyhow::Result;
-use std::default::Default;
+use std::{default::Default, fmt::Debug};
 use tokio::sync::mpsc;
 
 #[derive(Debug)]
-pub struct AuthResource {
+pub struct AuthResource<T>
+where
+    T: 'static + Send + Sync + Debug + AuthClient + Default,
+{
     sender: AuthResourceSender,
     receiver: Option<AuthResourceReceiver>,
-    resolver: Option<AuthResourceResolver>,
+    resolver: Option<AuthResourceResolver<T>>,
 }
 
-impl Default for AuthResource {
+impl<T> Default for AuthResource<T>
+where
+    T: 'static + Send + Sync + Debug + AuthClient + Default,
+{
     fn default() -> Self {
         let (sender, receiver) = mpsc::unbounded_channel();
 
@@ -24,7 +33,10 @@ impl Default for AuthResource {
     }
 }
 
-impl Spawn for AuthResource {
+impl<T> Spawn for AuthResource<T>
+where
+    T: 'static + Send + Sync + Debug + AuthClient + Default,
+{
     fn spawn(&mut self) -> Result<()> {
         let resolver = self
             .resolver
@@ -42,14 +54,24 @@ impl Spawn for AuthResource {
     }
 }
 
-impl AuthResource {
-    fn new() -> Self {
+impl<T> AuthResource<T>
+where
+    T: 'static + Send + Sync + Debug + AuthClient + Default,
+{
+    pub fn new(client: T) -> Self {
         AuthResource {
+            resolver: Some(AuthResourceResolver::new(client)),
             ..Default::default()
         }
     }
 
-    fn sender(&self) -> AuthResourceSender {
+    pub fn send(&self, event: AuthResourceEvent) -> Result<()> {
+        self.sender.send(event)?;
+
+        Ok(())
+    }
+
+    pub fn sender(&self) -> AuthResourceSender {
         self.sender.clone()
     }
 }
