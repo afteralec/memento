@@ -49,7 +49,7 @@ pub(crate) mod auth {
 
     pub use resource::{
         AuthClient, AuthRequest, AuthResource, AuthResourceEvent, AuthResourceReplyEvent,
-        AuthResourceSender, AuthResourceReplyReceiver, AuthResponse, Credential,
+        AuthResourceReplyReceiver, AuthResourceSender, AuthResponse, Credential,
     };
 }
 
@@ -63,12 +63,12 @@ pub(crate) mod keywords {
     pub(crate) use util::Keywords;
 }
 
-pub(crate) mod messaging {
-    pub(crate) mod functions;
-    pub(crate) mod traits;
+pub mod messaging {
+    pub mod functions;
+    pub mod traits;
 
-    pub(crate) use functions::resolve_receiver;
-    pub(crate) use traits::{ResolverMut, Spawn};
+    pub use functions::resolve_receiver;
+    pub use traits::{ResolverMut, Spawn};
 }
 
 pub(crate) mod player {
@@ -88,14 +88,20 @@ pub(crate) mod player {
 
         pub(crate) use super::Player;
         pub(crate) use error::PlayerResourceError;
-        pub(crate) use event::{PlayerResourceEvent, PlayerResourceReplyEvent};
+        pub use event::{PlayerResourceEvent, PlayerResourceReplyEvent};
         pub use interface::PlayerResource;
         pub(crate) use resolver::PlayerResourceResolver;
-        pub use types::{PlayerResourceReceiver, PlayerResourceSender};
+        pub use types::{
+            PlayerResourceReceiver, PlayerResourceReplyReceiver, PlayerResourceReplySender,
+            PlayerResourceSender,
+        };
     }
 
     pub use model::Player;
-    pub use resource::{PlayerResource, PlayerResourceSender};
+    pub use resource::{
+        PlayerResource, PlayerResourceEvent, PlayerResourceReceiver, PlayerResourceReplyEvent,
+        PlayerResourceReplyReceiver, PlayerResourceReplySender, PlayerResourceSender,
+    };
 }
 
 pub(crate) mod room {
@@ -159,10 +165,10 @@ pub(crate) mod session {
         pub(crate) mod error;
         pub(crate) mod event;
         pub(crate) mod functions {
-            pub mod error;
+            pub mod create;
             pub mod steps;
 
-            pub use steps::auth_step;
+            pub use steps::{auth_step, player_step};
         }
         pub(crate) mod interface;
         pub(crate) mod resolver;
@@ -171,8 +177,8 @@ pub(crate) mod session {
         pub use super::Session;
         pub use error::SessionResourceError;
         pub use event::SessionResourceEvent;
-        pub use interface::SessionResource;
         pub use functions::auth_step;
+        pub use interface::SessionResource;
         pub use resolver::SessionResourceResolver;
         pub use types::{SessionResourceReceiver, SessionResourceSender};
     }
@@ -186,11 +192,14 @@ pub(crate) mod session {
 use std::fmt::{Display, Formatter, Result};
 
 pub use actor::{Actor, ActorResource, ActorResourceSender};
-pub use auth::{AuthClient, AuthResource, AuthResourceSender, AuthResponse, Credential};
-pub use player::{Player, PlayerResource, PlayerResourceSender};
+pub use auth::{
+    AuthClient, AuthRequest, AuthResource, AuthResourceEvent, AuthResourceSender, AuthResponse,
+    Credential,
+};
+pub use player::{Player, PlayerResource, PlayerResourceEvent, PlayerResourceSender};
 pub use room::{
-    Room, RoomEdges, RoomError, RoomEvent, RoomReceiver, RoomResolver, RoomResource, RoomResourceSender, RoomSender,
-    RoomSize,
+    Room, RoomEdges, RoomError, RoomEvent, RoomReceiver, RoomResolver, RoomResource,
+    RoomResourceSender, RoomSender, RoomSize,
 };
 pub use server::Server;
 pub use session::{SessionResource, SessionResourceEvent, SessionResourceSender};

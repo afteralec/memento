@@ -38,6 +38,8 @@ where
     T: 'static + Send + Sync + Debug + AuthClient + Default,
 {
     fn spawn(&mut self) -> Result<()> {
+        tracing::info!("Spawning Auth Resource...");
+
         let resolver = self
             .resolver
             .take()
@@ -49,6 +51,8 @@ where
             .ok_or_else(|| AuthResourceError::NoReceiver)?;
 
         self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+
+        tracing::info!("Auth Resource spawned.");
 
         Ok(())
     }

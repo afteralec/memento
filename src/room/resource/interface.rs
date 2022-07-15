@@ -28,6 +28,8 @@ impl Default for RoomResource {
 
 impl Spawn for RoomResource {
     fn spawn(&mut self) -> Result<()> {
+        tracing::info!("Spawning Room Resource...");
+
         let resolver = self
             .resolver
             .take()
@@ -39,6 +41,8 @@ impl Spawn for RoomResource {
             .ok_or_else(|| RoomResourceError::NoReceiver)?;
 
         self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+
+        tracing::info!("Room Resource spawned.");
 
         Ok(())
     }

@@ -1,4 +1,4 @@
-use super::Player;
+use super::{Player, PlayerResourceReplySender};
 use crate::Id;
 use thiserror::Error;
 use tokio::sync::oneshot;

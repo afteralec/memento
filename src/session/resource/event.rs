@@ -9,7 +9,6 @@ pub enum SessionResourceEvent {
     NewSession {
         lines: Framed<TcpStream, LinesCodec>,
         addr: SocketAddr,
-        credential: Credential,
     },
 }
 

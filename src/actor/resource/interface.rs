@@ -27,6 +27,8 @@ impl Default for ActorResource {
 
 impl Spawn for ActorResource {
     fn spawn(&mut self) -> Result<()> {
+        tracing::info!("Spawning Actor Resource...");
+
         let resolver = self
             .resolver
             .take()
@@ -39,6 +41,8 @@ impl Spawn for ActorResource {
 
         self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
 
+        tracing::info!("Actor Resource spawned.");
+
         Ok(())
     }
 }
@@ -49,5 +53,9 @@ impl ActorResource {
             resolver: Some(ActorResourceResolver::new(actor_iter)),
             ..Default::default()
         }
+    }
+
+    pub fn sender(&self) -> ActorResourceSender {
+        self.sender.clone()
     }
 }

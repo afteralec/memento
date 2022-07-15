@@ -1,19 +1,20 @@
-use super::{Session, SessionResourceError, SessionResourceEvent, functions::auth_step};
+use super::{
+    functions::create::create_session, Session, SessionResourceError, SessionResourceEvent,
+};
 use crate::{
     actor::ActorResourceSender,
     auth::{
+        Credential,
         AuthRequest, AuthResourceEvent, AuthResourceReplyEvent, AuthResourceSender, AuthResponse,
     },
+    messaging,
     messaging::ResolverMut,
     player::PlayerResourceSender,
     room::RoomResourceSender,
     Id,
 };
 use anyhow::{Error, Result};
-use futures::{SinkExt, StreamExt};
 use std::{collections::HashMap, default::Default};
-use tokio::sync::{oneshot, oneshot::error::TryRecvError};
-use tokio_util::codec::{Framed, LinesCodec};
 
 #[derive(Debug)]
 pub struct SessionResourceResolver {
@@ -34,26 +35,57 @@ impl ResolverMut<SessionResourceEvent> for SessionResourceResolver {
             SessionResourceEvent::NewSession {
                 lines,
                 addr,
-                credential,
             } => {
-                let auth_resource_sender =
-                    self.state.auth_resource_sender.as_ref().ok_or_else(|| {
+                let auth_resource_sender = self
+                    .state
+                    .auth_resource_sender
+                    .as_ref()
+                    .cloned()
+                    .ok_or_else(|| {
                         Error::new(SessionResourceError::MissingResourceSender("auth resource"))
                     })?;
 
-                let (auth_reply_sender, auth_reply_receiver) = oneshot::channel();
+                let player_resource_sender = self
+                    .state
+                    .player_resource_sender
+                    .as_ref()
+                    .cloned()
+                    .ok_or_else(|| {
+                        Error::new(SessionResourceError::MissingResourceSender(
+                            "player resource",
+                        ))
+                    })?;
+                let player_resource_sender = player_resource_sender.clone();
 
-                auth_resource_sender.send(AuthResourceEvent::Request(
-                    AuthRequest::WithCredential(credential),
-                    auth_reply_sender,
-                ))?;
+                let actor_resource_sender = self
+                    .state
+                    .actor_resource_sender
+                    .as_ref()
+                    .cloned()
+                    .ok_or_else(|| {
+                        Error::new(SessionResourceError::MissingResourceSender(
+                            "actor resource",
+                        ))
+                    })?;
 
-                match auth_step(auth_reply_receiver)? {
-                    AuthResponse::Authenticated { id, player_id, actor_owned } => {
-                        tracing::debug!("id: {:?}, player_id: {:?}, actor_owned: {:?}", id, player_id, actor_owned);
-                    },
-                    AuthResponse::Forbidden => (),
-                }
+                let room_resource_sender = self
+                    .state
+                    .room_resource_sender
+                    .as_ref()
+                    .cloned()
+                    .ok_or_else(|| {
+                        Error::new(SessionResourceError::MissingResourceSender("room resource"))
+                    })?;
+
+                let _ = messaging::functions::spawn_and_trace(create_session(
+                    (lines, addr),
+                    (
+                        auth_resource_sender,
+                        player_resource_sender,
+                        actor_resource_sender,
+                        room_resource_sender,
+                    ),
+                ));
 
                 Ok(())
             }
@@ -63,8 +95,9 @@ impl ResolverMut<SessionResourceEvent> for SessionResourceResolver {
 
 impl SessionResourceResolver {
     pub fn configured_for_spawn(&self) -> bool {
-        self.state.actor_resource_sender.is_some()
+        self.state.auth_resource_sender.is_some()
             && self.state.player_resource_sender.is_some()
+            && self.state.actor_resource_sender.is_some()
             && self.state.room_resource_sender.is_some()
     }
 

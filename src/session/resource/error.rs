@@ -1,3 +1,4 @@
+use crate::Id;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -10,4 +11,16 @@ pub enum SessionResourceError<'a> {
     NoReceiver,
     #[error("attempted to resolve SessionResourceEvent, but was missing sender for {0}")]
     MissingResourceSender(&'a str),
+}
+
+#[derive(Debug, Error)]
+pub enum AuthStepError {
+    #[error("authentication denied")]
+    Forbidden,
+}
+
+#[derive(Debug, Error)]
+pub enum PlayerStepError {
+    #[error("failed to get player for id {0}")]
+    NoPlayerFound(Id),
 }

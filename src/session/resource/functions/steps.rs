@@ -1,28 +1,29 @@
+use super::super::error::PlayerStepError;
 use crate::{
-    auth::{
-        AuthResourceReplyEvent, AuthResponse, AuthResourceReplyReceiver
-    },
+    auth::{AuthResourceReplyEvent, AuthResourceReplyReceiver, AuthResponse},
+    player::{Player, PlayerResourceReplyEvent, PlayerResourceReplyReceiver},
 };
-use anyhow::{Result, Error};
-use tokio::sync::oneshot::error::TryRecvError;
+use anyhow::{Error, Result};
+use tokio::sync::oneshot::error::RecvError;
 
-pub fn auth_step(mut receiver: AuthResourceReplyReceiver) -> Result<AuthResponse> {
+pub async fn auth_step(receiver: AuthResourceReplyReceiver) -> Result<AuthResponse> {
     loop {
-        match receiver.try_recv() {
-            Ok(reply) => {
-                match reply {
-                    AuthResourceReplyEvent::Response(auth_response) => {
-                        return Ok(auth_response);
-                    }
-                }
+        match receiver.await? {
+            AuthResourceReplyEvent::Response(auth_response) => {
+                return Ok(auth_response);
             }
-            Err(err) => {
-                match err {
-                    TryRecvError::Closed => {
-                        return Err(Error::new(err));
-                    }
-                    TryRecvError::Empty => { continue; },
-                }
+        }
+    }
+}
+
+pub async fn player_step(receiver: PlayerResourceReplyReceiver) -> Result<Player> {
+    loop {
+        match receiver.await? {
+            PlayerResourceReplyEvent::GotPlayerById(_, player) => {
+                return Ok(player);
+            }
+            PlayerResourceReplyEvent::NoPlayerAtId(id) => {
+                return Err(Error::new(PlayerStepError::NoPlayerFound(id)));
             }
         }
     }

@@ -1,6 +1,5 @@
 use crate::{Credential, SessionResourceEvent, SessionResourceSender};
 use anyhow::Result;
-use futures::{SinkExt, StreamExt};
 use thiserror::Error;
 use tokio::{net, sync::mpsc};
 use tokio_util::codec::{Framed, LinesCodec};
@@ -72,31 +71,9 @@ pub async fn listen(addr: String, session_resource_sender: SessionResourceSender
 
         let mut lines = Framed::new(stream, LinesCodec::new());
 
-        // @TODO: Extract this to a login screen async function
-        lines.send("Please enter your username:").await?;
-
-        let username = match lines.next().await {
-            Some(Ok(line)) => line,
-            _ => {
-                tracing::error!("Failed to get username from {}. Client disconnected.", addr);
-                return Ok(());
-            }
-        };
-
-        lines.send("Please enter your password:").await?;
-
-        let password = match lines.next().await {
-            Some(Ok(line)) => line,
-            _ => {
-                tracing::error!("Failed to get username from {}. Client disconnected.", addr);
-                return Ok(());
-            }
-        };
-
         session_resource_sender.send(SessionResourceEvent::NewSession {
             lines,
             addr,
-            credential: Credential::UserNameAndPassword(username, password),
         })?;
     }
 }

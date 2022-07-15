@@ -27,6 +27,8 @@ impl Default for PlayerResource {
 
 impl Spawn for PlayerResource {
     fn spawn(&mut self) -> Result<()> {
+        tracing::info!("Spawning Player Resource...");
+
         let resolver = self
             .resolver
             .take()
@@ -38,6 +40,8 @@ impl Spawn for PlayerResource {
             .ok_or_else(|| PlayerResourceError::NoReceiver)?;
 
         self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+
+        tracing::info!("Player Resource Spawned.");
 
         Ok(())
     }
@@ -55,5 +59,9 @@ impl PlayerResource {
         self.sender.send(event)?;
 
         Ok(())
+    }
+
+    pub fn sender(&self) -> PlayerResourceSender {
+        self.sender.clone()
     }
 }
