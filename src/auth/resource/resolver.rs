@@ -1,4 +1,4 @@
-use super::{AuthClient, AuthRequest, AuthResourceEvent, AuthResourceReplyEvent};
+use super::{super::traits::AuthClient, AuthRequest, AuthResourceEvent, AuthResourceReplyEvent};
 use crate::messaging::traits::ResolverMut;
 use anyhow::Result;
 use std::{default::Default, fmt::Debug};

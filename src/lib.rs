@@ -47,6 +47,8 @@ pub(crate) mod auth {
             AuthResourceSender,
         };
     }
+
+    pub(crate) mod traits;
 }
 
 pub(crate) mod delay {
@@ -168,6 +170,8 @@ pub(crate) mod tools {
 
 // Define the public interface for the package
 pub mod core {
+    pub use crate::auth::{traits::AuthClient, resource::{AuthResponse, Credential}};
+
     pub use crate::server::Server;
 }
 pub mod model {
@@ -189,8 +193,6 @@ pub mod tooling {
     pub use crate::tools::actor_toml::read as read_actor_toml;
     pub use crate::tools::room_toml::read as read_room_toml;
 }
-
-pub use auth::resource::{AuthClient, AuthResponse, Credential};
 
 use std::fmt::{Display, Formatter, Result};
 

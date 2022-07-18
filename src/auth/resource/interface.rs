@@ -1,5 +1,5 @@
 use super::{
-    AuthClient, AuthResourceError, AuthResourceEvent, AuthResourceReceiver, AuthResourceResolver,
+    super::traits::AuthClient, AuthResourceError, AuthResourceEvent, AuthResourceReceiver, AuthResourceResolver,
     AuthResourceSender,
 };
 use crate::{messaging, messaging::traits::Spawn};
