@@ -1,4 +1,4 @@
-use crate::{SessionResourceEvent, SessionResourceSender};
+use crate::session::resource::{SessionResourceEvent, SessionResourceSender};
 use anyhow::Result;
 use thiserror::Error;
 use tokio::{net, sync::mpsc};

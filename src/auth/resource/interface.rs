@@ -2,7 +2,7 @@ use super::{
     AuthClient, AuthResourceError, AuthResourceEvent, AuthResourceReceiver, AuthResourceResolver,
     AuthResourceSender,
 };
-use crate::{messaging, messaging::Spawn};
+use crate::{messaging, messaging::traits::Spawn};
 
 use anyhow::Result;
 use std::{default::Default, fmt::Debug};
@@ -50,7 +50,7 @@ where
             .take()
             .ok_or_else(|| AuthResourceError::NoReceiver)?;
 
-        self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
 
         tracing::info!("Auth Resource spawned successfully");
 

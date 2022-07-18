@@ -8,7 +8,7 @@ pub struct Actor {
     gender: Gender,
     short_description: String,
     keywords: Vec<String>,
-    player: Option<player::Player>,
+    player: Option<player::model::Player>,
 }
 
 impl Actor {
@@ -72,7 +72,7 @@ impl Actor {
         self.keywords.iter()
     }
 
-    pub fn attach_player(&mut self, player: &player::Player) -> Result<()> {
+    pub fn attach_player(&mut self, player: &player::model::Player) -> Result<()> {
         if let Some(assigned_player) = &self.player {
             Err(Error::new(error::ActorError::PlayerAlreadyAttached(
                 self.id,
@@ -86,7 +86,7 @@ impl Actor {
         }
     }
 
-    pub fn unattach_player(&mut self) -> Option<player::Player> {
+    pub fn unattach_player(&mut self) -> Option<player::model::Player> {
         self.player.take()
     }
 
@@ -100,7 +100,7 @@ impl Actor {
         }
     }
 
-    pub fn send(&self, event: session::SessionEvent) -> Result<()> {
+    pub fn send(&self, event: session::model::SessionEvent) -> Result<()> {
         if let Some(player) = &self.player {
             player.send(event)?;
 

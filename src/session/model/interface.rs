@@ -1,5 +1,5 @@
 use super::{SessionError, SessionReceiver, SessionResolver, SessionSender};
-use crate::{messaging, messaging::Spawn, Id};
+use crate::{messaging, messaging::traits::Spawn, Id};
 use anyhow::Result;
 use std::default::Default;
 use tokio::sync::mpsc;
@@ -48,7 +48,7 @@ impl Spawn for Session {
             .take()
             .ok_or_else(|| SessionError::NoReceiver(self.id))?;
 
-        self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
 
         Ok(())
     }

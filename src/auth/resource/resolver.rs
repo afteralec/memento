@@ -1,5 +1,5 @@
 use super::{AuthClient, AuthRequest, AuthResourceEvent, AuthResourceReplyEvent};
-use crate::messaging::ResolverMut;
+use crate::messaging::traits::ResolverMut;
 use anyhow::Result;
 use std::{default::Default, fmt::Debug};
 

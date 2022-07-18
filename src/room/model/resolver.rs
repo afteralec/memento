@@ -1,5 +1,9 @@
 use super::delay::RoomDelayState;
-use crate::{actor, keywords, messaging, Id, Room, RoomEdges, RoomEvent, RoomSender, RoomSize};
+use crate::{
+    actor, keywords, messaging,
+    room::model::{Room, RoomEdges, RoomEvent, RoomSender, RoomSize},
+    Id,
+};
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
 
@@ -16,7 +20,7 @@ impl Default for RoomResolver {
     }
 }
 
-impl messaging::ResolverMut<RoomEvent> for RoomResolver {
+impl messaging::traits::ResolverMut<RoomEvent> for RoomResolver {
     fn resolve_on(&mut self, _event: RoomEvent) -> Result<()> {
         Ok(())
     }
@@ -34,7 +38,7 @@ impl RoomResolver {
     }
 }
 
-pub type RoomActors = HashMap<Id, actor::Actor>;
+pub type RoomActors = HashMap<Id, actor::model::Actor>;
 
 #[derive(Debug)]
 pub struct RoomState {
@@ -43,7 +47,7 @@ pub struct RoomState {
     description: String,
     size: RoomSize,
     edges: RoomEdges<RoomSender>,
-    keywords: keywords::Keywords,
+    keywords: keywords::util::Keywords,
     delays: RoomDelayState,
     actors: RoomActors,
 }
@@ -107,7 +111,7 @@ impl Default for RoomState {
             edges: [
                 None, None, None, None, None, None, None, None, None, None, None, None,
             ],
-            keywords: keywords::Keywords::default(),
+            keywords: keywords::util::Keywords::default(),
             delays: RoomDelayState::default(),
             actors: RoomActors::default(),
         }

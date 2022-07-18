@@ -1,8 +1,13 @@
 use super::{super::error::AuthStepError, actor_step, auth_step, player_step, room_step};
 use crate::{
-    ActorResourceEvent, ActorResourceSender, AuthRequest, AuthResourceEvent, AuthResourceSender,
-    AuthResponse, Credential, Id, PlayerResourceEvent, PlayerResourceSender, RoomResourceEvent,
-    RoomResourceSender, SessionResourceSender,
+    actor::resource::{ActorResourceEvent, ActorResourceSender},
+    auth::resource::{
+        AuthRequest, AuthResourceEvent, AuthResourceSender, AuthResponse, Credential,
+    },
+    player::resource::{PlayerResourceEvent, PlayerResourceSender},
+    room::resource::{RoomResourceEvent, RoomResourceSender},
+    session::resource::SessionResourceSender,
+    Id,
 };
 use anyhow::{Error, Result};
 use futures::{SinkExt, StreamExt};
@@ -20,7 +25,13 @@ type ResourceSenders = (
 
 pub async fn create_session(
     (mut lines, addr): (Framed<TcpStream, LinesCodec>, SocketAddr),
-    (session_resource_sender, auth_resource_sender, player_resource_sender, actor_resource_sender, room_resource_sender): ResourceSenders,
+    (
+        session_resource_sender,
+        auth_resource_sender,
+        player_resource_sender,
+        actor_resource_sender,
+        room_resource_sender,
+    ): ResourceSenders,
 ) -> Result<()> {
     // @TODO: Extract this to a login screen async function that can be injected from outside
     lines.send("Please enter your username:").await?;
@@ -85,8 +96,6 @@ pub async fn create_session(
         room_reply_sender,
     ))?;
     let room = room_step(room_reply_receiver).await?;
-
-
 
     Ok(())
 }

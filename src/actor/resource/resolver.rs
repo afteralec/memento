@@ -1,5 +1,5 @@
-use super::{Actor, ActorResourceEvent, ActorResourceReplyEvent};
-use crate::{messaging::ResolverMut, Id};
+use super::{super::model::Actor, ActorResourceEvent, ActorResourceReplyEvent};
+use crate::{messaging::traits::ResolverMut, Id};
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
 

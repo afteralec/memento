@@ -1,5 +1,5 @@
 use super::{error::SessionStateError, SessionEvent};
-use crate::{messaging::ResolverMut, Id, RoomSender};
+use crate::{messaging::traits::ResolverMut, room::model::RoomSender, Id};
 use anyhow::{Error, Result};
 use std::default::Default;
 

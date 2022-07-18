@@ -1,5 +1,5 @@
 use super::{RoomResourceEvent, RoomResourceReplyEvent};
-use crate::{messaging, messaging::traits::Spawn, Id, Room};
+use crate::{messaging, messaging::traits::Spawn, room::model::Room, Id};
 
 use anyhow::Result;
 use std::{collections::HashMap, default::Default, iter::Iterator};
@@ -17,7 +17,7 @@ impl Default for RoomResourceResolver {
     }
 }
 
-impl messaging::ResolverMut<RoomResourceEvent> for RoomResourceResolver {
+impl messaging::traits::ResolverMut<RoomResourceEvent> for RoomResourceResolver {
     fn resolve_on(&mut self, event: RoomResourceEvent) -> Result<()> {
         match event {
             RoomResourceEvent::GetRoomById(id, reply_sender) => {
@@ -99,7 +99,7 @@ impl RoomResourceState {
         for (_, room) in self.rooms.iter_mut() {
             room.spawn()?;
             count += 1;
-        };
+        }
 
         tracing::info!("{} rooms spawned successfully", count);
 

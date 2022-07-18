@@ -1,5 +1,5 @@
 use super::error;
-use crate::{keywords::Keywords, server, session, Id};
+use crate::{keywords::util::Keywords, server, session, Id};
 use anyhow::{Error, Result};
 use std::{collections::HashMap, default::Default};
 
@@ -12,7 +12,7 @@ pub struct Player {
     keywords: Keywords,
     current_actor_id: Option<Id>,
     writer: Option<server::StreamWriter>,
-    session_sender: Option<session::SessionSender>,
+    session_sender: Option<session::model::SessionSender>,
 }
 
 impl Default for Player {
@@ -65,7 +65,7 @@ impl Player {
         }
     }
 
-    pub fn send(&self, event: session::SessionEvent) -> Result<()> {
+    pub fn send(&self, event: session::model::SessionEvent) -> Result<()> {
         if let Some(session_sender) = &self.session_sender {
             session_sender.send(event)?;
 

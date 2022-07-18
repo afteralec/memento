@@ -1,5 +1,5 @@
 use super::{RoomEdges, RoomError, RoomEvent, RoomReceiver, RoomResolver, RoomSender, RoomSize};
-use crate::{messaging, messaging::Spawn, Id};
+use crate::{messaging, messaging::traits::Spawn, Id};
 
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
@@ -63,7 +63,7 @@ impl Spawn for Room {
             .take()
             .ok_or_else(|| RoomError::NoReceiver(self.id))?;
 
-        self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
 
         Ok(())
     }

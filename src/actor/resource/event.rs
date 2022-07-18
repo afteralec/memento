@@ -1,4 +1,4 @@
-use super::Actor;
+use super::super::model::Actor;
 use crate::Id;
 use thiserror::Error;
 use tokio::sync::oneshot;

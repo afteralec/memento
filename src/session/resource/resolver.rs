@@ -1,10 +1,11 @@
 use super::{
-    functions::create::create_session, Session, SessionResourceError, SessionResourceEvent,
+    super::model::Session, functions::create::create_session, SessionResourceError,
+    SessionResourceEvent, SessionResourceSender,
 };
 use crate::{
-    actor::ActorResourceSender, auth::AuthResourceSender, messaging, messaging::ResolverMut,
-    player::PlayerResourceSender, room::RoomResourceSender, Id,
-    session::SessionResourceSender,
+    actor::resource::ActorResourceSender, auth::resource::AuthResourceSender, messaging,
+    messaging::traits::ResolverMut, player::resource::PlayerResourceSender,
+    room::resource::RoomResourceSender, Id,
 };
 use anyhow::{Error, Result};
 use std::{collections::HashMap, default::Default};
@@ -73,7 +74,9 @@ impl ResolverMut<SessionResourceEvent> for SessionResourceResolver {
                     .as_ref()
                     .cloned()
                     .ok_or_else(|| {
-                        Error::new(SessionResourceError::MissingResourceSender("session resource"))
+                        Error::new(SessionResourceError::MissingResourceSender(
+                            "session resource",
+                        ))
                     })?;
 
                 let _ = messaging::functions::spawn_and_trace(create_session(

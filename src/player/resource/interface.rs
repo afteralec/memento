@@ -1,8 +1,8 @@
 use super::{
-    Player, PlayerResourceError, PlayerResourceEvent, PlayerResourceReceiver,
+    super::model::Player, PlayerResourceError, PlayerResourceEvent, PlayerResourceReceiver,
     PlayerResourceResolver, PlayerResourceSender,
 };
-use crate::{messaging, messaging::Spawn};
+use crate::{messaging, messaging::traits::Spawn};
 use anyhow::Result;
 use std::default::Default;
 use tokio::sync::mpsc;
@@ -39,7 +39,7 @@ impl Spawn for PlayerResource {
             .take()
             .ok_or_else(|| PlayerResourceError::NoReceiver)?;
 
-        self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
 
         tracing::info!("Player Resource spawned successfully");
 

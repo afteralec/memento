@@ -1,8 +1,9 @@
 use super::{
-    Room, RoomResourceError, RoomResourceReceiver, RoomResourceResolver, RoomResourceSender,
+    super::model::Room, RoomResourceError, RoomResourceReceiver, RoomResourceResolver,
+    RoomResourceSender,
 };
-use crate::{messaging, messaging::Spawn};
-use anyhow::{Result, Error};
+use crate::{messaging, messaging::traits::Spawn};
+use anyhow::{Error, Result};
 use std::default::Default;
 use tokio::sync::mpsc;
 
@@ -41,7 +42,7 @@ impl Spawn for RoomResource {
             .take()
             .ok_or_else(|| RoomResourceError::NoReceiver)?;
 
-        self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
 
         tracing::info!("Room Resource spawned successfully");
 

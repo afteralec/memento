@@ -1,5 +1,5 @@
-use super::{Player, PlayerResourceEvent, PlayerResourceReplyEvent};
-use crate::{messaging::ResolverMut, Id};
+use super::{super::model::Player, PlayerResourceEvent, PlayerResourceReplyEvent};
+use crate::{messaging::traits::ResolverMut, Id};
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
 

@@ -3,8 +3,8 @@ use super::{
     SessionResourceSender,
 };
 use crate::{
-    messaging, messaging::Spawn, ActorResourceSender, AuthResourceSender, PlayerResourceSender,
-    RoomResourceSender,
+    messaging, messaging::traits::Spawn, actor::resource::ActorResourceSender, auth::resource::AuthResourceSender,
+    player::resource::PlayerResourceSender, room::resource::RoomResourceSender,
 };
 use anyhow::{Error, Result};
 use std::default::Default;
@@ -47,7 +47,7 @@ impl Spawn for SessionResource {
             .take()
             .ok_or_else(|| SessionResourceError::NoReceiver)?;
 
-        self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
 
         tracing::info!("Session Resource spawned successfully");
 

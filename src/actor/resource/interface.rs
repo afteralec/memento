@@ -1,7 +1,8 @@
 use super::{
-    Actor, ActorResourceError, ActorResourceReceiver, ActorResourceResolver, ActorResourceSender,
+    super::model::Actor, ActorResourceError, ActorResourceReceiver, ActorResourceResolver,
+    ActorResourceSender,
 };
-use crate::{messaging, messaging::Spawn};
+use crate::{messaging, messaging::traits::Spawn};
 use anyhow::Result;
 use std::default::Default;
 use tokio::sync::mpsc;
@@ -39,7 +40,7 @@ impl Spawn for ActorResource {
             .take()
             .ok_or_else(|| ActorResourceError::NoReceiver)?;
 
-        self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
 
         tracing::info!("Actor Resource spawned successfully");
 

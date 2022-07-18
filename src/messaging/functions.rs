@@ -1,4 +1,4 @@
-use super::ResolverMut;
+use super::traits::ResolverMut;
 use anyhow::Result;
 use std::fmt;
 use tokio::{macros::support::Future, sync::mpsc};

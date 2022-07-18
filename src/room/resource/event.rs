@@ -1,4 +1,4 @@
-use super::Room;
+use super::super::model::Room;
 use crate::Id;
 use thiserror::Error;
 use tokio::sync::oneshot;

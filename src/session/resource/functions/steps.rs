@@ -1,9 +1,18 @@
 use super::super::error::{ActorStepError, PlayerStepError, RoomStepError};
 use crate::{
-    actor::{Actor, ActorResourceReplyEvent, ActorResourceReplyReceiver},
-    auth::{AuthResourceReplyEvent, AuthResourceReplyReceiver, AuthResponse},
-    player::{Player, PlayerResourceReplyEvent, PlayerResourceReplyReceiver},
-    room::{Room, RoomResourceReplyEvent, RoomResourceReplyReceiver},
+    actor::{
+        model::Actor,
+        resource::{ActorResourceReplyEvent, ActorResourceReplyReceiver},
+    },
+    auth::resource::{AuthResourceReplyEvent, AuthResourceReplyReceiver, AuthResponse},
+    player::{
+        model::Player,
+        resource::{PlayerResourceReplyEvent, PlayerResourceReplyReceiver},
+    },
+    room::{
+        model::Room,
+        resource::{RoomResourceReplyEvent, RoomResourceReplyReceiver},
+    },
 };
 use anyhow::{Error, Result};
 
