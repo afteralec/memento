@@ -99,12 +99,12 @@ impl Room {
             ..Default::default()
         };
 
-        room.generate_matcher();
+        room.generate_resolver();
 
         room
     }
 
-    fn generate_matcher(&mut self) {
+    fn generate_resolver(&mut self) {
         let _ = self.resolver.insert(RoomResolver::new(&self));
     }
 

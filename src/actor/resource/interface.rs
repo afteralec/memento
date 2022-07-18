@@ -41,7 +41,7 @@ impl Spawn for ActorResource {
 
         self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
 
-        tracing::info!("Actor Resource spawned.");
+        tracing::info!("Actor Resource spawned successfully");
 
         Ok(())
     }

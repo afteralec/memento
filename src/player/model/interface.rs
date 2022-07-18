@@ -10,7 +10,7 @@ pub struct Player {
     id: Id,
     names: Names,
     keywords: Keywords,
-    owns: Option<Id>,
+    current_actor_id: Option<Id>,
     writer: Option<server::StreamWriter>,
     session_sender: Option<session::SessionSender>,
 }
@@ -21,7 +21,7 @@ impl Default for Player {
             id: Id::new(0),
             names: Names::default(),
             keywords: Keywords::default(),
-            owns: None,
+            current_actor_id: None,
             writer: None,
             session_sender: None,
         }
@@ -41,14 +41,18 @@ impl Player {
     }
 
     pub fn assign_ownership(&mut self, id: &Id) -> Result<()> {
-        if let Some(owned_id) = &self.owns {
+        if let Some(owned_id) = &self.current_actor_id {
             Err(Error::new(error::PlayerError::AlreadyAssigned(
                 self.id, *id, *owned_id,
             )))
         } else {
-            let _ = self.owns.insert(*id);
+            let _ = self.current_actor_id.insert(*id);
             Ok(())
         }
+    }
+
+    pub fn get_current_actor_id(&self) -> Option<Id> {
+        self.current_actor_id
     }
 
     pub fn write(&self, string: &str) -> Result<()> {

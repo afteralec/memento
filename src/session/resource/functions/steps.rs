@@ -1,10 +1,11 @@
-use super::super::error::PlayerStepError;
+use super::super::error::{ActorStepError, PlayerStepError, RoomStepError};
 use crate::{
+    actor::{Actor, ActorResourceReplyEvent, ActorResourceReplyReceiver},
     auth::{AuthResourceReplyEvent, AuthResourceReplyReceiver, AuthResponse},
     player::{Player, PlayerResourceReplyEvent, PlayerResourceReplyReceiver},
+    room::{Room, RoomResourceReplyEvent, RoomResourceReplyReceiver},
 };
 use anyhow::{Error, Result};
-use tokio::sync::oneshot::error::RecvError;
 
 pub async fn auth_step(receiver: AuthResourceReplyReceiver) -> Result<AuthResponse> {
     loop {
@@ -24,6 +25,32 @@ pub async fn player_step(receiver: PlayerResourceReplyReceiver) -> Result<Player
             }
             PlayerResourceReplyEvent::NoPlayerAtId(id) => {
                 return Err(Error::new(PlayerStepError::NoPlayerFound(id)));
+            }
+        }
+    }
+}
+
+pub async fn actor_step(receiver: ActorResourceReplyReceiver) -> Result<Actor> {
+    loop {
+        match receiver.await? {
+            ActorResourceReplyEvent::GotActorById(_, actor) => {
+                return Ok(actor);
+            }
+            ActorResourceReplyEvent::NoActorAtId(id) => {
+                return Err(Error::new(ActorStepError::NoActorFound(id)));
+            }
+        }
+    }
+}
+
+pub async fn room_step(receiver: RoomResourceReplyReceiver) -> Result<Room> {
+    loop {
+        match receiver.await? {
+            RoomResourceReplyEvent::GotRoomById(_, room) => {
+                return Ok(room);
+            }
+            RoomResourceReplyEvent::NoRoomAtId(id) => {
+                return Err(Error::new(RoomStepError::NoRoomFound(id)));
             }
         }
     }

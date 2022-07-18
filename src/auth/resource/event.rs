@@ -29,8 +29,6 @@ pub enum AuthResponse {
     Authenticated {
         id: Id,
         player_id: Id,
-        actor_owned: Option<Id>,
-        // @TODO: Do I need multiple actors owned by a player?
         // @TODO: Add modeling for initial permissions here
     },
     Forbidden,

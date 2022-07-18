@@ -19,7 +19,7 @@ impl Default for ActorResourceResolver {
 impl ResolverMut<ActorResourceEvent> for ActorResourceResolver {
     fn resolve_on(&mut self, event: ActorResourceEvent) -> Result<()> {
         match event {
-            ActorResourceEvent::GetActorById { id, reply_sender } => {
+            ActorResourceEvent::GetActorById(id, reply_sender) => {
                 if let Some(actor) = self.state.actors.get(&id) {
                     reply_sender.send(ActorResourceReplyEvent::GotActorById(id, actor.clone()))?;
                 } else {

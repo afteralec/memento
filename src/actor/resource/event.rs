@@ -5,11 +5,8 @@ use tokio::sync::oneshot;
 
 #[derive(Debug, Error)]
 pub enum ActorResourceEvent {
-    #[error("ActorResource::GetActorById raised with id {} but channel is closed", .id)]
-    GetActorById {
-        id: Id,
-        reply_sender: oneshot::Sender<ActorResourceReplyEvent>,
-    },
+    #[error("ActorResource::GetActorById raised with id {0} but channel is closed")]
+    GetActorById(Id, oneshot::Sender<ActorResourceReplyEvent>),
 }
 
 #[derive(Debug, Error)]

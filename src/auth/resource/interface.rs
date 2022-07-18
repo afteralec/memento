@@ -52,7 +52,7 @@ where
 
         self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
 
-        tracing::info!("Auth Resource spawned.");
+        tracing::info!("Auth Resource spawned successfully");
 
         Ok(())
     }

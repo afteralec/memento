@@ -24,3 +24,15 @@ pub enum PlayerStepError {
     #[error("failed to get player for id {0}")]
     NoPlayerFound(Id),
 }
+
+#[derive(Debug, Error)]
+pub enum ActorStepError {
+    #[error("failed to get actor for id {0}")]
+    NoActorFound(Id),
+}
+
+#[derive(Debug, Error)]
+pub enum RoomStepError {
+    #[error("failed to get actor for id {0}")]
+    NoRoomFound(Id),
+}

@@ -2,8 +2,7 @@ use super::{
     Room, RoomResourceError, RoomResourceReceiver, RoomResourceResolver, RoomResourceSender,
 };
 use crate::{messaging, messaging::Spawn};
-
-use anyhow::Result;
+use anyhow::{Result, Error};
 use std::default::Default;
 use tokio::sync::mpsc;
 
@@ -30,6 +29,8 @@ impl Spawn for RoomResource {
     fn spawn(&mut self) -> Result<()> {
         tracing::info!("Spawning Room Resource...");
 
+        self.spawn_all()?;
+
         let resolver = self
             .resolver
             .take()
@@ -42,7 +43,7 @@ impl Spawn for RoomResource {
 
         self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
 
-        tracing::info!("Room Resource spawned.");
+        tracing::info!("Room Resource spawned successfully");
 
         Ok(())
     }
@@ -58,5 +59,15 @@ impl RoomResource {
 
     pub fn sender(&self) -> RoomResourceSender {
         self.sender.clone()
+    }
+
+    pub fn spawn_all(&mut self) -> Result<()> {
+        if let Some(resolver) = self.resolver.as_mut() {
+            resolver.spawn_all()?;
+
+            Ok(())
+        } else {
+            Err(Error::new(RoomResourceError::NoResolver))
+        }
     }
 }

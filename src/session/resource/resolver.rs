@@ -2,16 +2,9 @@ use super::{
     functions::create::create_session, Session, SessionResourceError, SessionResourceEvent,
 };
 use crate::{
-    actor::ActorResourceSender,
-    auth::{
-        Credential,
-        AuthRequest, AuthResourceEvent, AuthResourceReplyEvent, AuthResourceSender, AuthResponse,
-    },
-    messaging,
-    messaging::ResolverMut,
-    player::PlayerResourceSender,
-    room::RoomResourceSender,
-    Id,
+    actor::ActorResourceSender, auth::AuthResourceSender, messaging, messaging::ResolverMut,
+    player::PlayerResourceSender, room::RoomResourceSender, Id,
+    session::SessionResourceSender,
 };
 use anyhow::{Error, Result};
 use std::{collections::HashMap, default::Default};
@@ -32,10 +25,7 @@ impl Default for SessionResourceResolver {
 impl ResolverMut<SessionResourceEvent> for SessionResourceResolver {
     fn resolve_on(&mut self, event: SessionResourceEvent) -> Result<()> {
         match event {
-            SessionResourceEvent::NewSession {
-                lines,
-                addr,
-            } => {
+            SessionResourceEvent::NewSession { lines, addr } => {
                 let auth_resource_sender = self
                     .state
                     .auth_resource_sender
@@ -77,9 +67,19 @@ impl ResolverMut<SessionResourceEvent> for SessionResourceResolver {
                         Error::new(SessionResourceError::MissingResourceSender("room resource"))
                     })?;
 
+                let session_resource_sender = self
+                    .state
+                    .session_resource_sender
+                    .as_ref()
+                    .cloned()
+                    .ok_or_else(|| {
+                        Error::new(SessionResourceError::MissingResourceSender("session resource"))
+                    })?;
+
                 let _ = messaging::functions::spawn_and_trace(create_session(
                     (lines, addr),
                     (
+                        session_resource_sender,
                         auth_resource_sender,
                         player_resource_sender,
                         actor_resource_sender,
@@ -95,10 +95,15 @@ impl ResolverMut<SessionResourceEvent> for SessionResourceResolver {
 
 impl SessionResourceResolver {
     pub fn configured_for_spawn(&self) -> bool {
-        self.state.auth_resource_sender.is_some()
+        self.state.session_resource_sender.is_some()
+            && self.state.auth_resource_sender.is_some()
             && self.state.player_resource_sender.is_some()
             && self.state.actor_resource_sender.is_some()
             && self.state.room_resource_sender.is_some()
+    }
+
+    pub fn set_session_resource_sender(&mut self, sender: SessionResourceSender) {
+        let _ = self.state.set_session_resource_sender(sender);
     }
 
     pub fn set_auth_resource_sender(&mut self, sender: AuthResourceSender) {
@@ -120,6 +125,7 @@ impl SessionResourceResolver {
 
 #[derive(Debug)]
 pub struct SessionResourceState {
+    session_resource_sender: Option<SessionResourceSender>,
     auth_resource_sender: Option<AuthResourceSender>,
     actor_resource_sender: Option<ActorResourceSender>,
     player_resource_sender: Option<PlayerResourceSender>,
@@ -130,6 +136,7 @@ pub struct SessionResourceState {
 impl Default for SessionResourceState {
     fn default() -> Self {
         SessionResourceState {
+            session_resource_sender: None,
             auth_resource_sender: None,
             actor_resource_sender: None,
             player_resource_sender: None,
@@ -140,6 +147,10 @@ impl Default for SessionResourceState {
 }
 
 impl SessionResourceState {
+    pub fn set_session_resource_sender(&mut self, sender: SessionResourceSender) {
+        let _ = self.session_resource_sender.insert(sender);
+    }
+
     pub fn set_auth_resource_sender(&mut self, sender: AuthResourceSender) {
         let _ = self.auth_resource_sender.insert(sender);
     }

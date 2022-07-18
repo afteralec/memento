@@ -15,14 +15,20 @@ pub(crate) mod actor {
 
         pub use super::Actor;
         pub(crate) use error::ActorResourceError;
-        pub(crate) use event::{ActorResourceEvent, ActorResourceReplyEvent};
+        pub use event::{ActorResourceEvent, ActorResourceReplyEvent};
         pub use interface::ActorResource;
         pub(crate) use resolver::ActorResourceResolver;
-        pub use types::{ActorResourceReceiver, ActorResourceSender};
+        pub use types::{
+            ActorResourceReceiver, ActorResourceReplyReceiver, ActorResourceReplySender,
+            ActorResourceSender,
+        };
     }
 
     pub use model::Actor;
-    pub use resource::{ActorResource, ActorResourceSender};
+    pub use resource::{
+        ActorResource, ActorResourceEvent, ActorResourceReplyEvent, ActorResourceReplyReceiver,
+        ActorResourceReplySender, ActorResourceSender,
+    };
 }
 
 pub(crate) mod auth {
@@ -132,7 +138,10 @@ pub(crate) mod room {
         pub use event::{RoomResourceEvent, RoomResourceReplyEvent};
         pub use interface::RoomResource;
         pub use resolver::RoomResourceResolver;
-        pub use types::{RoomResourceReceiver, RoomResourceSender};
+        pub use types::{
+            RoomResourceReceiver, RoomResourceReplyReceiver, RoomResourceReplySender,
+            RoomResourceSender,
+        };
     }
 
     pub use model::{
@@ -140,7 +149,7 @@ pub(crate) mod room {
     };
     pub use resource::{
         RoomResource, RoomResourceEvent, RoomResourceReceiver, RoomResourceReplyEvent,
-        RoomResourceSender,
+        RoomResourceReplyReceiver, RoomResourceReplySender, RoomResourceSender,
     };
 }
 
@@ -168,7 +177,7 @@ pub(crate) mod session {
             pub mod create;
             pub mod steps;
 
-            pub use steps::{auth_step, player_step};
+            pub use steps::{actor_step, auth_step, player_step, room_step};
         }
         pub(crate) mod interface;
         pub(crate) mod resolver;
@@ -191,7 +200,7 @@ pub(crate) mod session {
 
 use std::fmt::{Display, Formatter, Result};
 
-pub use actor::{Actor, ActorResource, ActorResourceSender};
+pub use actor::{Actor, ActorResource, ActorResourceEvent, ActorResourceSender};
 pub use auth::{
     AuthClient, AuthRequest, AuthResource, AuthResourceEvent, AuthResourceSender, AuthResponse,
     Credential,
@@ -199,7 +208,8 @@ pub use auth::{
 pub use player::{Player, PlayerResource, PlayerResourceEvent, PlayerResourceSender};
 pub use room::{
     Room, RoomEdges, RoomError, RoomEvent, RoomReceiver, RoomResolver, RoomResource,
-    RoomResourceSender, RoomSender, RoomSize,
+    RoomResourceEvent, RoomResourceReplyEvent, RoomResourceReplyReceiver, RoomResourceSender,
+    RoomSender, RoomSize,
 };
 pub use server::Server;
 pub use session::{SessionResource, SessionResourceEvent, SessionResourceSender};

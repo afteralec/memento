@@ -1,5 +1,5 @@
 use super::{RoomResourceEvent, RoomResourceReplyEvent};
-use crate::{messaging, Id, Room};
+use crate::{messaging, messaging::traits::Spawn, Id, Room};
 
 use anyhow::Result;
 use std::{collections::HashMap, default::Default, iter::Iterator};
@@ -39,6 +39,12 @@ impl RoomResourceResolver {
             state: RoomResourceState::new(room_iter),
         }
     }
+
+    pub fn spawn_all(&mut self) -> Result<()> {
+        self.state.spawn_all()?;
+
+        Ok(())
+    }
 }
 
 #[derive(Debug)]
@@ -56,9 +62,8 @@ impl Default for RoomResourceState {
 
 impl RoomResourceState {
     pub fn new(room_iter: impl Iterator<Item = Room>) -> Self {
-        let mut rooms = room_iter.fold(HashMap::new(), |mut rooms, room| {
+        let rooms = room_iter.fold(HashMap::new(), |mut rooms, room| {
             rooms.insert(room.id(), room);
-
             rooms
         });
 
@@ -85,5 +90,19 @@ impl RoomResourceState {
         for (_, room) in self.rooms.iter_mut() {
             room.hydrate_edges(&room_senders);
         }
+    }
+
+    pub fn spawn_all(&mut self) -> Result<()> {
+        tracing::info!("Spawning rooms from Room Resource");
+
+        let mut count: u64 = 0;
+        for (_, room) in self.rooms.iter_mut() {
+            room.spawn()?;
+            count += 1;
+        };
+
+        tracing::info!("{} rooms spawned successfully", count);
+
+        Ok(())
     }
 }

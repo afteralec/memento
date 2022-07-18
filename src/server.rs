@@ -1,4 +1,4 @@
-use crate::{Credential, SessionResourceEvent, SessionResourceSender};
+use crate::{SessionResourceEvent, SessionResourceSender};
 use anyhow::Result;
 use thiserror::Error;
 use tokio::{net, sync::mpsc};
@@ -68,13 +68,9 @@ pub async fn listen(addr: String, session_resource_sender: SessionResourceSender
 
     loop {
         let (stream, addr) = listener.accept().await?;
+        let lines = Framed::new(stream, LinesCodec::new());
 
-        let mut lines = Framed::new(stream, LinesCodec::new());
-
-        session_resource_sender.send(SessionResourceEvent::NewSession {
-            lines,
-            addr,
-        })?;
+        session_resource_sender.send(SessionResourceEvent::NewSession { lines, addr })?;
     }
 }
 

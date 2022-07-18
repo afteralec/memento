@@ -1,7 +1,8 @@
-use super::{super::error::AuthStepError, auth_step, player_step};
+use super::{super::error::AuthStepError, actor_step, auth_step, player_step, room_step};
 use crate::{
-    ActorResourceSender, AuthRequest, AuthResourceEvent, AuthResourceSender, AuthResponse,
-    Credential, PlayerResourceEvent, PlayerResourceSender, RoomResourceSender,
+    ActorResourceEvent, ActorResourceSender, AuthRequest, AuthResourceEvent, AuthResourceSender,
+    AuthResponse, Credential, Id, PlayerResourceEvent, PlayerResourceSender, RoomResourceEvent,
+    RoomResourceSender, SessionResourceSender,
 };
 use anyhow::{Error, Result};
 use futures::{SinkExt, StreamExt};
@@ -10,6 +11,7 @@ use tokio::{net::TcpStream, sync::oneshot};
 use tokio_util::codec::{Framed, LinesCodec};
 
 type ResourceSenders = (
+    SessionResourceSender,
     AuthResourceSender,
     PlayerResourceSender,
     ActorResourceSender,
@@ -18,10 +20,9 @@ type ResourceSenders = (
 
 pub async fn create_session(
     (mut lines, addr): (Framed<TcpStream, LinesCodec>, SocketAddr),
-    (auth_resource_sender, player_resource_sender, actor_resource_sender, room_resource_sender): ResourceSenders,
+    (session_resource_sender, auth_resource_sender, player_resource_sender, actor_resource_sender, room_resource_sender): ResourceSenders,
 ) -> Result<()> {
-
-    // @TODO: Extract this to a login screen async function
+    // @TODO: Extract this to a login screen async function that can be injected from outside
     lines.send("Please enter your username:").await?;
 
     let username = match lines.next().await {
@@ -52,12 +53,8 @@ pub async fn create_session(
     ))?;
 
     // @TODO: Use these auth ids to get good metrics/logs around the auth process
-    let (id, player_id, actor_owned) = match auth_step(auth_reply_receiver).await? {
-        AuthResponse::Authenticated {
-            id,
-            player_id,
-            actor_owned,
-        } => (id, player_id, actor_owned),
+    let (id, player_id) = match auth_step(auth_reply_receiver).await? {
+        AuthResponse::Authenticated { id, player_id } => (id, player_id),
         AuthResponse::Forbidden => return Err(Error::new(AuthStepError::Forbidden)),
     };
 
@@ -66,9 +63,30 @@ pub async fn create_session(
         player_id,
         player_reply_sender,
     ))?;
-    let mut player = player_step(player_reply_receiver).await?;
+    let player = player_step(player_reply_receiver).await?;
 
-    tracing::debug!("{:?}", player);
+    let current_actor_id = if let Some(current_actor_id) = player.get_current_actor_id() {
+        current_actor_id
+    } else {
+        // @TODO: Redirect to a character creation/no-current-character interface
+        return Ok(());
+    };
+
+    let (actor_reply_sender, actor_reply_receiver) = oneshot::channel();
+    actor_resource_sender.send(ActorResourceEvent::GetActorById(
+        current_actor_id,
+        actor_reply_sender,
+    ))?;
+    let actor = actor_step(actor_reply_receiver).await?;
+
+    let (room_reply_sender, room_reply_receiver) = oneshot::channel();
+    room_resource_sender.send(RoomResourceEvent::GetRoomById(
+        Id::new(1),
+        room_reply_sender,
+    ))?;
+    let room = room_step(room_reply_receiver).await?;
+
+
 
     Ok(())
 }

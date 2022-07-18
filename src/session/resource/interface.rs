@@ -49,7 +49,7 @@ impl Spawn for SessionResource {
 
         self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
 
-        tracing::info!("Session Resource spawned.");
+        tracing::info!("Session Resource spawned successfully");
 
         Ok(())
     }

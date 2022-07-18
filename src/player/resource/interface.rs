@@ -41,7 +41,7 @@ impl Spawn for PlayerResource {
 
         self.spawn_and_trace(messaging::resolve_receiver(receiver, resolver));
 
-        tracing::info!("Player Resource Spawned.");
+        tracing::info!("Player Resource spawned successfully");
 
         Ok(())
     }
