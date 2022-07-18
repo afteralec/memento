@@ -79,9 +79,9 @@ impl RoomState {
         ];
     }
 
-    pub fn set_edges(&mut self, edges: &[(usize, Option<RoomSender>)]) {
+    pub fn set_edges(&mut self, edges: &[(usize, &Option<RoomSender>)]) {
         for (edge_index, edge) in edges {
-            self.set_edge(edge_index, edge);
+            self.set_edge(edge_index, *edge);
         }
     }
 

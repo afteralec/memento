@@ -1,12 +1,11 @@
-use super::super::model::Player;
+use super::{super::model::Player, PlayerResourceReplySender};
 use crate::Id;
 use thiserror::Error;
-use tokio::sync::oneshot;
 
 #[derive(Debug, Error)]
 pub enum PlayerResourceEvent {
     #[error("PlayerResource::GetPlayerById raised with id {0} but channel is closed")]
-    GetPlayerById(Id, oneshot::Sender<PlayerResourceReplyEvent>),
+    GetPlayerById(Id, PlayerResourceReplySender),
 }
 
 #[derive(Debug, Error)]

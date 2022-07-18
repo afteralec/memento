@@ -1,12 +1,11 @@
-use super::super::model::Actor;
+use super::{super::model::Actor, ActorResourceReplySender};
 use crate::Id;
 use thiserror::Error;
-use tokio::sync::oneshot;
 
 #[derive(Debug, Error)]
 pub enum ActorResourceEvent {
     #[error("ActorResource::GetActorById raised with id {0} but channel is closed")]
-    GetActorById(Id, oneshot::Sender<ActorResourceReplyEvent>),
+    GetActorById(Id, ActorResourceReplySender),
 }
 
 #[derive(Debug, Error)]

@@ -1,10 +1,10 @@
 use super::{
-    SessionResourceError, SessionResourceEvent, SessionResourceReceiver, SessionResourceResolver,
-    SessionResourceSender,
+    SessionResourceError, SessionResourceReceiver, SessionResourceResolver, SessionResourceSender,
 };
 use crate::{
-    messaging, messaging::traits::Spawn, actor::resource::ActorResourceSender, auth::resource::AuthResourceSender,
-    player::resource::PlayerResourceSender, room::resource::RoomResourceSender,
+    actor::resource::ActorResourceSender, auth::resource::AuthResourceSender, messaging,
+    messaging::traits::Spawn, player::resource::PlayerResourceSender,
+    room::resource::RoomResourceSender,
 };
 use anyhow::{Error, Result};
 use std::default::Default;

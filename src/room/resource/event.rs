@@ -1,12 +1,11 @@
-use super::super::model::Room;
+use super::{super::model::Room, RoomResourceReplySender};
 use crate::Id;
 use thiserror::Error;
-use tokio::sync::oneshot;
 
 #[derive(Debug, Error)]
 pub enum RoomResourceEvent {
     #[error("RoomResource::GetRoomById raised with id {0} but channel is closed")]
-    GetRoomById(Id, oneshot::Sender<RoomResourceReplyEvent>),
+    GetRoomById(Id, RoomResourceReplySender),
 }
 
 #[derive(Debug, Error)]

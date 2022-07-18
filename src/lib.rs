@@ -190,7 +190,7 @@ pub mod tooling {
     pub use crate::tools::room_toml::read as read_room_toml;
 }
 
-pub use auth::resource::{Credential, AuthClient, AuthResponse,};
+pub use auth::resource::{AuthClient, AuthResponse, Credential};
 
 use std::fmt::{Display, Formatter, Result};
 

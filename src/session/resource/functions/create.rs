@@ -58,7 +58,7 @@ pub async fn create_session(
 
     let (auth_reply_sender, auth_reply_receiver) = oneshot::channel();
 
-    let result = auth_resource_sender.send(AuthResourceEvent::Request(
+    auth_resource_sender.send(AuthResourceEvent::Request(
         AuthRequest::WithCredential(credential),
         auth_reply_sender,
     ))?;
