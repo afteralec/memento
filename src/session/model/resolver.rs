@@ -1,5 +1,5 @@
 use super::{error::SessionStateError, SessionEvent};
-use crate::{messaging::traits::ResolverMut, room::model::Room, Id};
+use crate::{messaging::traits::Resolver, room::model::Room, Id};
 use anyhow::{Error, Result};
 use std::default::Default;
 
@@ -16,7 +16,7 @@ impl Default for SessionResolver {
     }
 }
 
-impl ResolverMut<SessionEvent> for SessionResolver {
+impl Resolver<SessionEvent> for SessionResolver {
     fn resolve_on(&mut self, event: SessionEvent) -> Result<()> {
         Ok(())
     }

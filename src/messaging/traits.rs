@@ -15,13 +15,6 @@ pub trait Resolver<T>
 where
     T: 'static + Send + Sync + Debug,
 {
-    fn resolve_on(&self, event: T) -> Result<()>;
-}
-
-pub trait ResolverMut<T>
-where
-    T: 'static + Send + Sync + Debug,
-{
     fn resolve_on(&mut self, event: T) -> Result<()>;
 }
 

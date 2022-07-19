@@ -1,7 +1,7 @@
 use super::{RoomResourceEvent, RoomResourceReplyEvent};
 use crate::{
     messaging,
-    messaging::traits::{Detach, ProvideProxy},
+    messaging::traits::{Detach, ProvideProxy, Resolver},
     room::model::Room,
     Id,
 };
@@ -21,7 +21,7 @@ impl Default for RoomResourceResolver {
     }
 }
 
-impl messaging::traits::ResolverMut<RoomResourceEvent> for RoomResourceResolver {
+impl Resolver<RoomResourceEvent> for RoomResourceResolver {
     fn resolve_on(&mut self, event: RoomResourceEvent) -> Result<()> {
         match event {
             RoomResourceEvent::GetRoomById(id, reply_sender) => {

@@ -1,6 +1,7 @@
 use super::delay::RoomDelayState;
 use crate::{
-    actor, keywords, messaging,
+    actor, keywords,
+    messaging::traits::Resolver,
     room::model::{Room, RoomEdges, RoomEvent, RoomSender, RoomSize},
     Id,
 };
@@ -20,7 +21,7 @@ impl Default for RoomResolver {
     }
 }
 
-impl messaging::traits::ResolverMut<RoomEvent> for RoomResolver {
+impl Resolver<RoomEvent> for RoomResolver {
     fn resolve_on(&mut self, _event: RoomEvent) -> Result<()> {
         Ok(())
     }

@@ -1,5 +1,5 @@
 use super::{super::traits::AuthClient, AuthRequest, AuthResourceEvent, AuthResourceReplyEvent};
-use crate::messaging::traits::ResolverMut;
+use crate::messaging::traits::Resolver;
 use anyhow::Result;
 use std::{default::Default, fmt::Debug};
 
@@ -22,7 +22,7 @@ where
     }
 }
 
-impl<T> ResolverMut<AuthResourceEvent> for AuthResourceResolver<T>
+impl<T> Resolver<AuthResourceEvent> for AuthResourceResolver<T>
 where
     T: 'static + Send + Sync + Debug + AuthClient + Default,
 {

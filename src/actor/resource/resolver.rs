@@ -1,5 +1,5 @@
 use super::{super::model::Actor, ActorResourceEvent, ActorResourceReplyEvent};
-use crate::{messaging::traits::ResolverMut, Id};
+use crate::{messaging::traits::Resolver, Id};
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
 
@@ -16,7 +16,7 @@ impl Default for ActorResourceResolver {
     }
 }
 
-impl ResolverMut<ActorResourceEvent> for ActorResourceResolver {
+impl Resolver<ActorResourceEvent> for ActorResourceResolver {
     fn resolve_on(&mut self, event: ActorResourceEvent) -> Result<()> {
         match event {
             ActorResourceEvent::GetActorById(id, reply_sender) => {

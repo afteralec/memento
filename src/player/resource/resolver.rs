@@ -1,5 +1,5 @@
 use super::{super::model::Player, PlayerResourceEvent, PlayerResourceReplyEvent};
-use crate::{messaging::traits::ResolverMut, Id};
+use crate::{messaging::traits::Resolver, Id};
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
 
@@ -16,7 +16,7 @@ impl Default for PlayerResourceResolver {
     }
 }
 
-impl ResolverMut<PlayerResourceEvent> for PlayerResourceResolver {
+impl Resolver<PlayerResourceEvent> for PlayerResourceResolver {
     fn resolve_on(&mut self, event: PlayerResourceEvent) -> Result<()> {
         match event {
             PlayerResourceEvent::GetPlayerById(id, reply_sender) => {

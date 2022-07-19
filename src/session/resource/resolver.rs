@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     actor::resource::ActorResourceSender, auth::resource::AuthResourceSender, messaging,
-    messaging::traits::ResolverMut, player::resource::PlayerResourceSender,
+    messaging::traits::Resolver, player::resource::PlayerResourceSender,
     room::resource::RoomResourceSender, Id,
 };
 use anyhow::{Error, Result};
@@ -23,7 +23,7 @@ impl Default for SessionResourceResolver {
     }
 }
 
-impl ResolverMut<SessionResourceEvent> for SessionResourceResolver {
+impl Resolver<SessionResourceEvent> for SessionResourceResolver {
     fn resolve_on(&mut self, event: SessionResourceEvent) -> Result<()> {
         match event {
             SessionResourceEvent::NewSession { lines, addr } => {

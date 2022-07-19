@@ -1,4 +1,4 @@
-use super::traits::ResolverMut;
+use super::traits::Resolver;
 use anyhow::Result;
 use futures::{stream::SplitStream, StreamExt};
 use std::fmt;
@@ -11,7 +11,7 @@ pub async fn resolve_receiver<T, R>(
 ) -> Result<()>
 where
     T: 'static + Send + Sync + fmt::Debug,
-    R: 'static + Send + Sync + fmt::Debug + ResolverMut<T>,
+    R: 'static + Send + Sync + fmt::Debug + Resolver<T>,
 {
     while let Some(event) = receiver.recv().await {
         resolver.resolve_on(event)?;
@@ -30,8 +30,8 @@ pub async fn resolve_stream_and_receiver<T, R, S>(
 ) -> Result<()>
 where
     T: 'static + Send + Sync + fmt::Debug,
-    R: 'static + Send + Sync + fmt::Debug + ResolverMut<T>,
-    S: 'static + Send + Sync + fmt::Debug + ResolverMut<String>,
+    R: 'static + Send + Sync + fmt::Debug + Resolver<T>,
+    S: 'static + Send + Sync + fmt::Debug + Resolver<String>,
 {
     tokio::select!(
          Some(event) = receiver.recv() => {
