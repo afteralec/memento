@@ -2,7 +2,10 @@ use super::{
     super::model::Actor, ActorResourceError, ActorResourceReceiver, ActorResourceResolver,
     ActorResourceSender,
 };
-use crate::{messaging, messaging::traits::Spawn};
+use crate::{
+    messaging,
+    messaging::traits::{Detach, Spawn},
+};
 use anyhow::Result;
 use std::default::Default;
 use tokio::sync::mpsc;
@@ -26,8 +29,13 @@ impl Default for ActorResource {
     }
 }
 
-impl Spawn for ActorResource {
-    fn spawn(&mut self) -> Result<()> {
+impl Spawn for ActorResource {}
+
+impl Detach for ActorResource
+where
+    Self: Spawn,
+{
+    fn detach(&mut self) -> Result<()> {
         tracing::info!("Spawning Actor Resource...");
 
         let resolver = self

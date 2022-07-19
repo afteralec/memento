@@ -1,5 +1,9 @@
 use super::{RoomEdges, RoomError, RoomEvent, RoomReceiver, RoomResolver, RoomSender, RoomSize};
-use crate::{messaging, messaging::traits::Spawn, Id};
+use crate::{
+    messaging,
+    messaging::traits::{Detach, Spawn},
+    Id,
+};
 
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
@@ -51,8 +55,13 @@ impl Clone for Room {
     }
 }
 
-impl Spawn for Room {
-    fn spawn(&mut self) -> Result<()> {
+impl Spawn for Room {}
+
+impl Detach for Room
+where
+    Self: Spawn,
+{
+    fn detach(&mut self) -> Result<()> {
         let resolver = self
             .resolver
             .take()

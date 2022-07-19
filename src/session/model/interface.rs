@@ -1,5 +1,9 @@
 use super::{SessionError, SessionReceiver, SessionResolver, SessionSender};
-use crate::{messaging, messaging::traits::Spawn, Id};
+use crate::{
+    messaging,
+    messaging::traits::{Detach, Spawn},
+    Id,
+};
 use anyhow::Result;
 use std::default::Default;
 use tokio::sync::mpsc;
@@ -36,8 +40,13 @@ impl Clone for Session {
     }
 }
 
-impl Spawn for Session {
-    fn spawn(&mut self) -> Result<()> {
+impl Spawn for Session {}
+
+impl Detach for Session
+where
+    Self: Spawn,
+{
+    fn detach(&mut self) -> Result<()> {
         let resolver = self
             .resolver
             .take()

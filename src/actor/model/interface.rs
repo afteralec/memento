@@ -1,5 +1,5 @@
 use super::error;
-use crate::{player, session, Id};
+use crate::{player::model::Player, session::model::SessionEvent, Id};
 use anyhow::{Error, Result};
 
 #[derive(Debug, Clone)]
@@ -8,7 +8,7 @@ pub struct Actor {
     gender: Gender,
     short_description: String,
     keywords: Vec<String>,
-    player: Option<player::model::Player>,
+    player: Option<Player>,
 }
 
 impl Actor {
@@ -29,7 +29,7 @@ impl Actor {
             id: Id(id),
             gender,
             short_description: short_description.to_owned(),
-            keywords: keywords.clone(),
+            keywords: keywords.to_owned(),
             player: None,
         }
     }
@@ -72,7 +72,7 @@ impl Actor {
         self.keywords.iter()
     }
 
-    pub fn attach_player(&mut self, player: &player::model::Player) -> Result<()> {
+    pub fn attach_player(&mut self, player: &Player) -> Result<()> {
         if let Some(assigned_player) = &self.player {
             Err(Error::new(error::ActorError::PlayerAlreadyAttached(
                 self.id,
@@ -86,7 +86,7 @@ impl Actor {
         }
     }
 
-    pub fn unattach_player(&mut self) -> Option<player::model::Player> {
+    pub fn unattach_player(&mut self) -> Option<Player> {
         self.player.take()
     }
 
@@ -100,7 +100,7 @@ impl Actor {
         }
     }
 
-    pub fn send(&self, event: session::model::SessionEvent) -> Result<()> {
+    pub fn send(&self, event: SessionEvent) -> Result<()> {
         if let Some(player) = &self.player {
             player.send(event)?;
 

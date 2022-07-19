@@ -68,6 +68,7 @@ pub(crate) mod player {
     pub(crate) mod model {
         pub(crate) mod error;
         pub(crate) mod interface;
+        pub(crate) mod types;
 
         pub use interface::Player;
     }
@@ -170,7 +171,10 @@ pub(crate) mod tools {
 
 // Define the public interface for the package
 pub mod core {
-    pub use crate::auth::{traits::AuthClient, resource::{AuthResponse, Credential}};
+    pub use crate::auth::{
+        resource::{AuthResponse, Credential},
+        traits::AuthClient,
+    };
 
     pub use crate::server::Server;
 }

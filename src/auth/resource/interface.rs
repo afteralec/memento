@@ -1,8 +1,11 @@
 use super::{
-    super::traits::AuthClient, AuthResourceError, AuthResourceEvent, AuthResourceReceiver, AuthResourceResolver,
-    AuthResourceSender,
+    super::traits::AuthClient, AuthResourceError, AuthResourceEvent, AuthResourceReceiver,
+    AuthResourceResolver, AuthResourceSender,
 };
-use crate::{messaging, messaging::traits::Spawn};
+use crate::{
+    messaging,
+    messaging::traits::{Detach, Spawn},
+};
 
 use anyhow::Result;
 use std::{default::Default, fmt::Debug};
@@ -33,11 +36,14 @@ where
     }
 }
 
-impl<T> Spawn for AuthResource<T>
+impl<T> Spawn for AuthResource<T> where T: 'static + Send + Sync + Debug + AuthClient + Default {}
+
+impl<T> Detach for AuthResource<T>
 where
     T: 'static + Send + Sync + Debug + AuthClient + Default,
+    Self: Spawn,
 {
-    fn spawn(&mut self) -> Result<()> {
+    fn detach(&mut self) -> Result<()> {
         tracing::info!("Spawning Auth Resource...");
 
         let resolver = self

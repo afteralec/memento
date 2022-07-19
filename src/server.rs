@@ -4,8 +4,6 @@ use thiserror::Error;
 use tokio::{net, sync::mpsc};
 use tokio_util::codec::{Framed, LinesCodec};
 
-pub type StreamWriter = mpsc::UnboundedSender<String>;
-
 #[derive(Debug)]
 pub struct Server {
     ip: String,

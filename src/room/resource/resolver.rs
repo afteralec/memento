@@ -1,5 +1,5 @@
 use super::{RoomResourceEvent, RoomResourceReplyEvent};
-use crate::{messaging, messaging::traits::Spawn, room::model::Room, Id};
+use crate::{messaging, messaging::traits::Detach, room::model::Room, Id};
 
 use anyhow::Result;
 use std::{collections::HashMap, default::Default, iter::Iterator};
@@ -40,8 +40,8 @@ impl RoomResourceResolver {
         }
     }
 
-    pub fn spawn_all(&mut self) -> Result<()> {
-        self.state.spawn_all()?;
+    pub fn detach_all(&mut self) -> Result<()> {
+        self.state.detach_all()?;
 
         Ok(())
     }
@@ -92,12 +92,12 @@ impl RoomResourceState {
         }
     }
 
-    pub fn spawn_all(&mut self) -> Result<()> {
+    pub fn detach_all(&mut self) -> Result<()> {
         tracing::info!("Spawning rooms from Room Resource");
 
         let mut count: u64 = 0;
         for (_, room) in self.rooms.iter_mut() {
-            room.spawn()?;
+            room.detach()?;
             count += 1;
         }
 

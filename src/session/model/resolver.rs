@@ -1,5 +1,5 @@
 use super::{error::SessionStateError, SessionEvent};
-use crate::{messaging::traits::ResolverMut, room::model::RoomSender, Id};
+use crate::{messaging::traits::ResolverMut, room::model::Room, Id};
 use anyhow::{Error, Result};
 use std::default::Default;
 
@@ -25,14 +25,14 @@ impl ResolverMut<SessionEvent> for SessionResolver {
 #[derive(Debug)]
 pub struct SessionState {
     id: Id,
-    room_sender: Option<RoomSender>,
+    room: Option<Room>,
 }
 
 impl Default for SessionState {
     fn default() -> Self {
         SessionState {
             id: Id(0),
-            room_sender: None,
+            room: None,
         }
     }
 }

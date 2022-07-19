@@ -2,7 +2,10 @@ use super::{
     super::model::Player, PlayerResourceError, PlayerResourceEvent, PlayerResourceReceiver,
     PlayerResourceResolver, PlayerResourceSender,
 };
-use crate::{messaging, messaging::traits::Spawn};
+use crate::{
+    messaging,
+    messaging::traits::{Detach, Spawn},
+};
 use anyhow::Result;
 use std::default::Default;
 use tokio::sync::mpsc;
@@ -25,8 +28,13 @@ impl Default for PlayerResource {
     }
 }
 
-impl Spawn for PlayerResource {
-    fn spawn(&mut self) -> Result<()> {
+impl Spawn for PlayerResource {}
+
+impl Detach for PlayerResource
+where
+    Self: Spawn,
+{
+    fn detach(&mut self) -> Result<()> {
         tracing::info!("Spawning Player Resource...");
 
         let resolver = self

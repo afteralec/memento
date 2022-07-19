@@ -1,11 +1,23 @@
-use super::{super::error::AuthStepError, actor_step, auth_step, player_step, room_step};
+use super::{
+    super::error::{AuthStepError, PlayerStepError},
+    actor_step, auth_step, player_step, room_step,
+};
 use crate::{
-    actor::resource::{ActorResourceEvent, ActorResourceSender},
+    actor::{
+        model::Actor,
+        resource::{ActorResourceEvent, ActorResourceSender},
+    },
     auth::resource::{
         AuthRequest, AuthResourceEvent, AuthResourceSender, AuthResponse, Credential,
     },
-    player::resource::{PlayerResourceEvent, PlayerResourceSender},
-    room::resource::{RoomResourceEvent, RoomResourceSender},
+    player::{
+        model::Player,
+        resource::{PlayerResourceEvent, PlayerResourceSender},
+    },
+    room::{
+        model::Room,
+        resource::{RoomResourceEvent, RoomResourceSender},
+    },
     session::resource::SessionResourceSender,
     Id,
 };
@@ -56,6 +68,33 @@ pub async fn create_session(
 
     let credential = Credential::UserNameAndPassword(username, password);
 
+    // @TODO: Let this match on the underlying AuthStepError and PlayerStepError to redirect to the appropriate interface
+    let (mut actor, mut player, room) = resource_steps(
+        credential,
+        &auth_resource_sender,
+        &actor_resource_sender,
+        &player_resource_sender,
+        &room_resource_sender,
+    )
+    .await?;
+
+    // Split the player's Lines into Stream and Writer
+    let (sink, stream) = lines.split();
+
+    player.attach_sink(sink);
+    // Attach the player to the Actor
+    actor.attach_player(&player)?;
+
+    Ok(())
+}
+
+async fn resource_steps(
+    credential: Credential,
+    auth_resource_sender: &AuthResourceSender,
+    actor_resource_sender: &ActorResourceSender,
+    player_resource_sender: &PlayerResourceSender,
+    room_resource_sender: &RoomResourceSender,
+) -> Result<(Actor, Player, Room)> {
     let (auth_reply_sender, auth_reply_receiver) = oneshot::channel();
 
     auth_resource_sender.send(AuthResourceEvent::Request(
@@ -80,7 +119,7 @@ pub async fn create_session(
         current_actor_id
     } else {
         // @TODO: Redirect to a character creation/no-current-character interface
-        return Ok(());
+        return Err(Error::new(PlayerStepError::NoActorOwned(player.id())));
     };
 
     let (actor_reply_sender, actor_reply_receiver) = oneshot::channel();
@@ -97,5 +136,5 @@ pub async fn create_session(
     ))?;
     let room = room_step(room_reply_receiver).await?;
 
-    Ok(())
+    Ok((actor, player, room))
 }

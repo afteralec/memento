@@ -2,8 +2,11 @@ use super::{
     SessionResourceError, SessionResourceReceiver, SessionResourceResolver, SessionResourceSender,
 };
 use crate::{
-    actor::resource::ActorResourceSender, auth::resource::AuthResourceSender, messaging,
-    messaging::traits::Spawn, player::resource::PlayerResourceSender,
+    actor::resource::ActorResourceSender,
+    auth::resource::AuthResourceSender,
+    messaging,
+    messaging::traits::{Detach, Spawn},
+    player::resource::PlayerResourceSender,
     room::resource::RoomResourceSender,
 };
 use anyhow::{Error, Result};
@@ -29,8 +32,13 @@ impl Default for SessionResource {
     }
 }
 
-impl Spawn for SessionResource {
-    fn spawn(&mut self) -> Result<()> {
+impl Spawn for SessionResource {}
+
+impl Detach for SessionResource
+where
+    Self: Spawn,
+{
+    fn detach(&mut self) -> Result<()> {
         tracing::info!("Spawning Session Resource...");
 
         let resolver = self

@@ -23,6 +23,8 @@ pub enum AuthStepError {
 pub enum PlayerStepError {
     #[error("failed to get player for id {0}")]
     NoPlayerFound(Id),
+    #[error("player id {0} has no currently owned actor")]
+    NoActorOwned(Id),
 }
 
 #[derive(Debug, Error)]

@@ -25,10 +25,12 @@ where
     fn resolve_on(&mut self, event: T) -> Result<()>;
 }
 
-// @TODO: Get these types to return the receiver out of the Future
-pub trait Spawn {
-    fn spawn(&mut self) -> Result<()>;
+// @TODO: Get this to return any needed structs back to the caller out of the Future
+pub trait Detach {
+    fn detach(&mut self) -> Result<()>;
+}
 
+pub trait Spawn {
     fn spawn_and_trace<F>(&self, f: F) -> tokio::task::JoinHandle<()>
     where
         F: Future<Output = Result<()>> + Send + 'static,
@@ -39,4 +41,18 @@ pub trait Spawn {
             }
         })
     }
+}
+
+pub trait Proxy<T>
+where
+    T: 'static + Send + Sync + Debug + Detach,
+{
+}
+
+pub trait ProvideProxy<T, I>
+where
+    T: 'static + Send + Sync + Debug + Proxy<I>,
+    I: 'static + Send + Sync + Debug + Detach,
+{
+    fn provide_proxy(&self) -> T;
 }

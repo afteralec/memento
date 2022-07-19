@@ -2,7 +2,10 @@ use super::{
     super::model::Room, RoomResourceError, RoomResourceReceiver, RoomResourceResolver,
     RoomResourceSender,
 };
-use crate::{messaging, messaging::traits::Spawn};
+use crate::{
+    messaging,
+    messaging::traits::{Detach, Spawn},
+};
 use anyhow::{Error, Result};
 use std::default::Default;
 use tokio::sync::mpsc;
@@ -26,11 +29,16 @@ impl Default for RoomResource {
     }
 }
 
-impl Spawn for RoomResource {
-    fn spawn(&mut self) -> Result<()> {
+impl Spawn for RoomResource {}
+
+impl Detach for RoomResource
+where
+    Self: Spawn,
+{
+    fn detach(&mut self) -> Result<()> {
         tracing::info!("Spawning Room Resource...");
 
-        self.spawn_all()?;
+        self.detach_all()?;
 
         let resolver = self
             .resolver
@@ -62,9 +70,9 @@ impl RoomResource {
         self.sender.clone()
     }
 
-    pub fn spawn_all(&mut self) -> Result<()> {
+    pub fn detach_all(&mut self) -> Result<()> {
         if let Some(resolver) = self.resolver.as_mut() {
-            resolver.spawn_all()?;
+            resolver.detach_all()?;
 
             Ok(())
         } else {
