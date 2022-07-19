@@ -1,6 +1,7 @@
 use super::{error::SessionStateError, SessionEvent};
 use crate::{messaging::traits::Resolver, room::model::Room, Id};
 use anyhow::{Error, Result};
+use async_trait::async_trait;
 use std::default::Default;
 
 #[derive(Debug)]
@@ -16,9 +17,16 @@ impl Default for SessionResolver {
     }
 }
 
+#[async_trait]
 impl Resolver<SessionEvent> for SessionResolver {
     fn resolve_on(&mut self, event: SessionEvent) -> Result<()> {
         Ok(())
+    }
+
+    async fn resolve_async(&mut self, _: SessionEvent) -> Result<()> {
+        unimplemented!(
+            "Async resolution not supported for SessionResolver, use resolve_on instead."
+        );
     }
 }
 

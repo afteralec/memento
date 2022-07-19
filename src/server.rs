@@ -1,7 +1,7 @@
 use crate::session::resource::{SessionResourceEvent, SessionResourceSender};
 use anyhow::Result;
 use thiserror::Error;
-use tokio::{net, sync::mpsc};
+use tokio::net;
 use tokio_util::codec::{Framed, LinesCodec};
 
 #[derive(Debug)]

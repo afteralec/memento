@@ -1,6 +1,7 @@
 use super::{super::model::Player, PlayerResourceEvent, PlayerResourceReplyEvent};
 use crate::{messaging::traits::Resolver, Id};
 use anyhow::Result;
+use async_trait::async_trait;
 use std::{collections::HashMap, default::Default};
 
 #[derive(Debug)]
@@ -16,6 +17,7 @@ impl Default for PlayerResourceResolver {
     }
 }
 
+#[async_trait]
 impl Resolver<PlayerResourceEvent> for PlayerResourceResolver {
     fn resolve_on(&mut self, event: PlayerResourceEvent) -> Result<()> {
         match event {
@@ -30,6 +32,10 @@ impl Resolver<PlayerResourceEvent> for PlayerResourceResolver {
                 Ok(())
             }
         }
+    }
+
+    async fn resolve_async(&mut self, _: PlayerResourceEvent) -> Result<()> {
+        unimplemented!("Async resolution isn't needed for PlayerResource, use resolve_on instead");
     }
 }
 

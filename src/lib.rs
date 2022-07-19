@@ -68,6 +68,7 @@ pub(crate) mod player {
     pub(crate) mod model {
         pub(crate) mod error;
         pub(crate) mod interface;
+        pub(crate) mod resolver;
         pub(crate) mod types;
 
         pub use interface::Player;

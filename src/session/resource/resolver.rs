@@ -8,6 +8,7 @@ use crate::{
     room::resource::RoomResourceSender, Id,
 };
 use anyhow::{Error, Result};
+use async_trait::async_trait;
 use std::{collections::HashMap, default::Default};
 
 #[derive(Debug)]
@@ -23,6 +24,7 @@ impl Default for SessionResourceResolver {
     }
 }
 
+#[async_trait]
 impl Resolver<SessionResourceEvent> for SessionResourceResolver {
     fn resolve_on(&mut self, event: SessionResourceEvent) -> Result<()> {
         match event {
@@ -93,6 +95,12 @@ impl Resolver<SessionResourceEvent> for SessionResourceResolver {
                 Ok(())
             }
         }
+    }
+
+    async fn resolve_async(&mut self, _: SessionResourceEvent) -> Result<()> {
+        unimplemented!(
+            "Async resolution not supported for SessionResourceResolver, use resolve_on instead."
+        );
     }
 }
 

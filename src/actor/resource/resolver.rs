@@ -1,6 +1,7 @@
 use super::{super::model::Actor, ActorResourceEvent, ActorResourceReplyEvent};
 use crate::{messaging::traits::Resolver, Id};
 use anyhow::Result;
+use async_trait::async_trait;
 use std::{collections::HashMap, default::Default};
 
 #[derive(Debug)]
@@ -16,6 +17,7 @@ impl Default for ActorResourceResolver {
     }
 }
 
+#[async_trait]
 impl Resolver<ActorResourceEvent> for ActorResourceResolver {
     fn resolve_on(&mut self, event: ActorResourceEvent) -> Result<()> {
         match event {
@@ -29,6 +31,12 @@ impl Resolver<ActorResourceEvent> for ActorResourceResolver {
                 Ok(())
             }
         }
+    }
+
+    async fn resolve_async(&mut self, _: ActorResourceEvent) -> Result<()> {
+        unimplemented!(
+            "Async resolution isn't supported for ActorResourceResolver, use resolve_on instead."
+        );
     }
 }
 

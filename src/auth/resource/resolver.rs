@@ -1,6 +1,7 @@
 use super::{super::traits::AuthClient, AuthRequest, AuthResourceEvent, AuthResourceReplyEvent};
 use crate::messaging::traits::Resolver;
 use anyhow::Result;
+use async_trait::async_trait;
 use std::{default::Default, fmt::Debug};
 
 #[derive(Debug)]
@@ -22,6 +23,7 @@ where
     }
 }
 
+#[async_trait]
 impl<T> Resolver<AuthResourceEvent> for AuthResourceResolver<T>
 where
     T: 'static + Send + Sync + Debug + AuthClient + Default,
@@ -37,6 +39,12 @@ where
                 }
             },
         }
+    }
+
+    async fn resolve_async(&mut self, _: AuthResourceEvent) -> Result<()> {
+        unimplemented!(
+            "Async resolution not supported for AuthResourceResolver, use resolve_on instead."
+        );
     }
 }
 

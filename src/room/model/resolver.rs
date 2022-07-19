@@ -6,6 +6,7 @@ use crate::{
     Id,
 };
 use anyhow::Result;
+use async_trait::async_trait;
 use std::{collections::HashMap, default::Default};
 
 #[derive(Debug)]
@@ -21,9 +22,14 @@ impl Default for RoomResolver {
     }
 }
 
+#[async_trait]
 impl Resolver<RoomEvent> for RoomResolver {
     fn resolve_on(&mut self, _event: RoomEvent) -> Result<()> {
         Ok(())
+    }
+
+    async fn resolve_async(&mut self, _: RoomEvent) -> Result<()> {
+        unimplemented!("Async resolution is not enabled for RoomResolver, use resolve_on instead.");
     }
 }
 
