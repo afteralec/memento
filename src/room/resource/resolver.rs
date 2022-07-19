@@ -1,6 +1,10 @@
 use super::{RoomResourceEvent, RoomResourceReplyEvent};
-use crate::{messaging, messaging::traits::Detach, room::model::Room, Id};
-
+use crate::{
+    messaging,
+    messaging::traits::{Detach, ProvideProxy},
+    room::model::Room,
+    Id,
+};
 use anyhow::Result;
 use std::{collections::HashMap, default::Default, iter::Iterator};
 
@@ -22,7 +26,10 @@ impl messaging::traits::ResolverMut<RoomResourceEvent> for RoomResourceResolver 
         match event {
             RoomResourceEvent::GetRoomById(id, reply_sender) => {
                 if let Some(room) = self.state.rooms.get(&id) {
-                    reply_sender.send(RoomResourceReplyEvent::GotRoomById(id, room.clone()))?;
+                    reply_sender.send(RoomResourceReplyEvent::GotRoomById(
+                        id,
+                        room.provide_proxy(),
+                    ))?;
                 } else {
                     reply_sender.send(RoomResourceReplyEvent::NoRoomAtId(id))?;
                 }
@@ -87,7 +94,7 @@ impl RoomResourceState {
                     room_senders
                 });
 
-        for (_, room) in self.rooms.iter_mut() {
+        for room in self.rooms.values_mut() {
             room.hydrate_edges(&room_senders);
         }
     }
@@ -96,7 +103,7 @@ impl RoomResourceState {
         tracing::info!("Spawning rooms from Room Resource");
 
         let mut count: u64 = 0;
-        for (_, room) in self.rooms.iter_mut() {
+        for room in self.rooms.values_mut() {
             room.detach()?;
             count += 1;
         }

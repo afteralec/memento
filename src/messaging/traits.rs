@@ -43,16 +43,11 @@ pub trait Spawn {
     }
 }
 
-pub trait Proxy<T>
-where
-    T: 'static + Send + Sync + Debug + Detach,
-{
-}
+pub trait Proxy {}
 
-pub trait ProvideProxy<T, I>
+pub trait ProvideProxy<T>
 where
-    T: 'static + Send + Sync + Debug + Proxy<I>,
-    I: 'static + Send + Sync + Debug + Detach,
+    T: 'static + Send + Sync + Debug + Proxy,
 {
     fn provide_proxy(&self) -> T;
 }

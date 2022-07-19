@@ -1,10 +1,11 @@
-use super::{RoomEdges, RoomError, RoomEvent, RoomReceiver, RoomResolver, RoomSender, RoomSize};
+use super::{
+    RoomEdges, RoomError, RoomEvent, RoomProxy, RoomReceiver, RoomResolver, RoomSender, RoomSize,
+};
 use crate::{
     messaging,
-    messaging::traits::{Detach, Spawn},
+    messaging::traits::{Detach, ProvideProxy, Spawn},
     Id,
 };
-
 use anyhow::Result;
 use std::{collections::HashMap, default::Default};
 use tokio::sync::mpsc;
@@ -75,6 +76,12 @@ where
         self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
 
         Ok(())
+    }
+}
+
+impl ProvideProxy<RoomProxy> for Room {
+    fn provide_proxy(&self) -> RoomProxy {
+        RoomProxy::from(&self)
     }
 }
 
@@ -174,6 +181,10 @@ impl Room {
 
     pub fn size(&self) -> RoomSize {
         self.size
+    }
+
+    pub fn edges(&self) -> RoomEdges<Id> {
+        self.edges
     }
 
     pub fn sender(&self) -> RoomSender {

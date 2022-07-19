@@ -15,7 +15,7 @@ use crate::{
         resource::{PlayerResourceEvent, PlayerResourceSender},
     },
     room::{
-        model::Room,
+        model::RoomProxy,
         resource::{RoomResourceEvent, RoomResourceSender},
     },
     session::resource::SessionResourceSender,
@@ -94,7 +94,7 @@ async fn resource_steps(
     actor_resource_sender: &ActorResourceSender,
     player_resource_sender: &PlayerResourceSender,
     room_resource_sender: &RoomResourceSender,
-) -> Result<(Actor, Player, Room)> {
+) -> Result<(Actor, Player, RoomProxy)> {
     let (auth_reply_sender, auth_reply_receiver) = oneshot::channel();
 
     auth_resource_sender.send(AuthResourceEvent::Request(

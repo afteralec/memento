@@ -10,7 +10,7 @@ use crate::{
         resource::{PlayerResourceReplyEvent, PlayerResourceReplyReceiver},
     },
     room::{
-        model::Room,
+        model::RoomProxy,
         resource::{RoomResourceReplyEvent, RoomResourceReplyReceiver},
     },
 };
@@ -52,11 +52,11 @@ pub async fn actor_step(receiver: ActorResourceReplyReceiver) -> Result<Actor> {
     }
 }
 
-pub async fn room_step(receiver: RoomResourceReplyReceiver) -> Result<Room> {
+pub async fn room_step(receiver: RoomResourceReplyReceiver) -> Result<RoomProxy> {
     loop {
         match receiver.await? {
-            RoomResourceReplyEvent::GotRoomById(_, room) => {
-                return Ok(room);
+            RoomResourceReplyEvent::GotRoomById(_, room_proxy) => {
+                return Ok(room_proxy);
             }
             RoomResourceReplyEvent::NoRoomAtId(id) => {
                 return Err(Error::new(RoomStepError::NoRoomFound(id)));

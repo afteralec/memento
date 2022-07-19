@@ -98,12 +98,14 @@ pub(crate) mod room {
         pub(crate) mod error;
         pub(crate) mod event;
         pub(crate) mod interface;
+        pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
 
         pub use error::RoomError;
         pub use event::RoomEvent;
         pub use interface::Room;
+        pub use proxy::RoomProxy;
         pub use resolver::RoomResolver;
         pub use types::{RoomEdges, RoomReceiver, RoomSender, RoomSize};
     }
