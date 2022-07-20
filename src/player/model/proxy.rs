@@ -39,3 +39,13 @@ impl Proxy<Player> for PlayerProxy {
         }
     }
 }
+
+impl PlayerProxy {
+    pub fn id(&self) -> Id {
+        self.id
+    }
+
+    pub fn current_actor_id(&self) -> Option<Id> {
+        self.current_actor_id
+    }
+}

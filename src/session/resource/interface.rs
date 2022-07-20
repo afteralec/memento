@@ -80,11 +80,7 @@ where
     }
 }
 
-impl ProvideProxy<SessionResourceProxy> for SessionResource {
-    fn proxy(&self) -> SessionResourceProxy {
-        SessionResourceProxy::proxy(&self)
-    }
-}
+impl ProvideProxy<SessionResourceProxy> for SessionResource {}
 
 impl SessionResource {
     pub fn new() -> Self {

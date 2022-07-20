@@ -70,11 +70,7 @@ where
     }
 }
 
-impl ProvideProxy<RoomResourceProxy> for RoomResource {
-    fn proxy(&self) -> RoomResourceProxy {
-        RoomResourceProxy::proxy(&self)
-    }
-}
+impl ProvideProxy<RoomResourceProxy> for RoomResource {}
 
 impl RoomResource {
     pub fn new(room_iter: impl Iterator<Item = Room>) -> Self {

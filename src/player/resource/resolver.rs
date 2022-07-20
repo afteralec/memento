@@ -2,7 +2,7 @@ use super::{
     super::model::Player,
     event::{PlayerResourceEvent, PlayerResourceReplyEvent},
 };
-use crate::{messaging::traits::Resolver, Id};
+use crate::{messaging::traits::{ProvideProxy, Resolver}, Id};
 use anyhow::Result;
 use async_trait::async_trait;
 use std::{collections::HashMap, default::Default};
@@ -27,7 +27,7 @@ impl Resolver<PlayerResourceEvent> for PlayerResourceResolver {
             PlayerResourceEvent::GetPlayerById(id, reply_sender) => {
                 if let Some(player) = self.state.players.get(&id) {
                     reply_sender
-                        .send(PlayerResourceReplyEvent::GotPlayerById(id, player.clone()))?;
+                        .send(PlayerResourceReplyEvent::GotPlayerById(id, player.proxy()))?;
                 } else {
                     reply_sender.send(PlayerResourceReplyEvent::NoPlayerAtId(id))?;
                 }

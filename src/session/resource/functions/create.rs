@@ -11,7 +11,7 @@ use crate::{
         AuthRequest, AuthResourceEvent, AuthResourceSender, AuthResponse, Credential,
     },
     player::{
-        model::Player,
+        model::proxy::PlayerProxy,
         resource::{PlayerResourceEvent, PlayerResourceSender},
     },
     room::{
@@ -93,7 +93,7 @@ async fn resource_steps(
     actor_resource_sender: &ActorResourceSender,
     player_resource_sender: &PlayerResourceSender,
     room_resource_sender: &RoomResourceSender,
-) -> Result<(Actor, Player, RoomProxy)> {
+) -> Result<(Actor, PlayerProxy, RoomProxy)> {
     let (auth_reply_sender, auth_reply_receiver) = oneshot::channel();
 
     auth_resource_sender.send(AuthResourceEvent::Request(
@@ -114,7 +114,7 @@ async fn resource_steps(
     ))?;
     let player = player_step(player_reply_receiver).await?;
 
-    let current_actor_id = if let Some(current_actor_id) = player.get_current_actor_id() {
+    let current_actor_id = if let Some(current_actor_id) = player.current_actor_id() {
         current_actor_id
     } else {
         // @TODO: Redirect to a character creation/no-current-character interface

@@ -1,6 +1,7 @@
 use super::{
     error::PlayerError,
     event::PlayerEvent,
+    proxy::PlayerProxy,
     resolver::PlayerResolver,
     types::{PlayerReceiver, PlayerSender},
 };
@@ -9,7 +10,7 @@ use crate::{
     messaging::{
         error::SpawnError,
         functions::resolve_receiver,
-        traits::{Detach, Raise, Spawn},
+        traits::{Detach, ProvideProxy, Raise, Spawn},
     },
     Id,
 };
@@ -89,6 +90,8 @@ impl Detach for Player {
         Ok(())
     }
 }
+
+impl ProvideProxy<PlayerProxy> for Player {}
 
 impl Player {
     pub fn new(id: u64) -> Self {

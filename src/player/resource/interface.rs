@@ -71,11 +71,7 @@ where
     }
 }
 
-impl ProvideProxy<PlayerResourceProxy> for PlayerResource {
-    fn proxy(&self) -> PlayerResourceProxy {
-        PlayerResourceProxy::proxy(&self)
-    }
-}
+impl ProvideProxy<PlayerResourceProxy> for PlayerResource {}
 
 impl PlayerResource {
     pub fn new(player_iter: impl Iterator<Item = Player>) -> Self {

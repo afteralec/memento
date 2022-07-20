@@ -6,7 +6,7 @@ use crate::{
     },
     auth::resource::{AuthResourceReplyEvent, AuthResourceReplyReceiver, AuthResponse},
     player::{
-        model::Player,
+        model::proxy::PlayerProxy,
         resource::{PlayerResourceReplyEvent, PlayerResourceReplyReceiver},
     },
     room::{
@@ -26,7 +26,7 @@ pub async fn auth_step(receiver: AuthResourceReplyReceiver) -> Result<AuthRespon
     }
 }
 
-pub async fn player_step(receiver: PlayerResourceReplyReceiver) -> Result<Player> {
+pub async fn player_step(receiver: PlayerResourceReplyReceiver) -> Result<PlayerProxy> {
     loop {
         match receiver.await? {
             PlayerResourceReplyEvent::GotPlayerById(_, player) => {
