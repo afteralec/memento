@@ -1,10 +1,12 @@
 use super::{
-    super::model::Actor, ActorResourceError, ActorResourceReceiver, ActorResourceResolver,
-    ActorResourceSender,
+    super::model::Actor,
+    error::ActorResourceError,
+    resolver::ActorResourceResolver,
+    types::{ActorResourceReceiver, ActorResourceSender},
 };
-use crate::{
-    messaging,
-    messaging::traits::{Detach, Spawn},
+use crate::messaging::{
+    functions::resolve_receiver,
+    traits::{Detach, Spawn},
 };
 use anyhow::Result;
 use std::default::Default;
@@ -48,7 +50,7 @@ where
             .take()
             .ok_or_else(|| ActorResourceError::NoReceiver)?;
 
-        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
         tracing::info!("Actor Resource spawned successfully");
 

@@ -1,4 +1,4 @@
-use super::error;
+use super::error::ActorError;
 use crate::{player::model::Player, session::model::SessionEvent, Id};
 use anyhow::{Error, Result};
 
@@ -74,7 +74,7 @@ impl Actor {
 
     pub fn attach_player(&mut self, player: &Player) -> Result<()> {
         if let Some(assigned_player) = &self.player {
-            Err(Error::new(error::ActorError::PlayerAlreadyAttached(
+            Err(Error::new(ActorError::PlayerAlreadyAttached(
                 self.id,
                 player.id(),
                 assigned_player.id(),
@@ -90,23 +90,21 @@ impl Actor {
         self.player.take()
     }
 
-    pub fn write(&self, string: &str) -> Result<()> {
-        if let Some(player) = &self.player {
-            player.write(string)?;
+    pub fn write(&self, _string: &str) -> Result<()> {
+        if let Some(_player) = &self.player {
+            // player.write(string)?;
 
             Ok(())
         } else {
-            Err(Error::new(error::ActorError::NoPlayer(self.id)))
+            Err(Error::new(ActorError::NoPlayer(self.id)))
         }
     }
 
-    pub fn send(&self, event: SessionEvent) -> Result<()> {
-        if let Some(player) = &self.player {
-            player.send(event)?;
-
+    pub fn send(&self, _event: SessionEvent) -> Result<()> {
+        if let Some(_player) = &self.player {
             Ok(())
         } else {
-            Err(Error::new(error::ActorError::NoPlayer(self.id)))
+            Err(Error::new(ActorError::NoPlayer(self.id)))
         }
     }
 }

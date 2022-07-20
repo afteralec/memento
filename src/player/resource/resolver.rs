@@ -1,4 +1,7 @@
-use super::{super::model::Player, PlayerResourceEvent, PlayerResourceReplyEvent};
+use super::{
+    super::model::Player,
+    event::{PlayerResourceEvent, PlayerResourceReplyEvent},
+};
 use crate::{messaging::traits::Resolver, Id};
 use anyhow::Result;
 use async_trait::async_trait;

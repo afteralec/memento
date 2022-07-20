@@ -1,4 +1,4 @@
-use super::{PlayerResourceEvent, PlayerResourceReplyEvent};
+use super::event::{PlayerResourceEvent, PlayerResourceReplyEvent};
 use tokio::sync::{mpsc, oneshot};
 
 pub type PlayerResourceSender = mpsc::UnboundedSender<PlayerResourceEvent>;

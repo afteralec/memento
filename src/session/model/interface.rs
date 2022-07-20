@@ -1,7 +1,13 @@
-use super::{SessionError, SessionReceiver, SessionResolver, SessionSender};
+use super::{
+    resolver::SessionResolver,
+    types::{SessionReceiver, SessionSender},
+};
 use crate::{
-    messaging,
-    messaging::traits::{Detach, Spawn},
+    messaging::{
+        error::SpawnError,
+        functions::resolve_receiver,
+        traits::{Detach, Spawn},
+    },
     Id,
 };
 use anyhow::Result;
@@ -50,14 +56,14 @@ where
         let resolver = self
             .resolver
             .take()
-            .ok_or_else(|| SessionError::NoResolver(self.id))?;
+            .ok_or_else(|| SpawnError::NoResolver(format!("session id {}", self.id)))?;
 
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| SessionError::NoReceiver(self.id))?;
+            .ok_or_else(|| SpawnError::NoReceiver(format!("session id {}", self.id)))?;
 
-        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
     }

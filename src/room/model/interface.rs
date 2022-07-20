@@ -1,9 +1,15 @@
 use super::{
-    RoomEdges, RoomError, RoomEvent, RoomProxy, RoomReceiver, RoomResolver, RoomSender, RoomSize,
+    event::RoomEvent,
+    proxy::RoomProxy,
+    resolver::RoomResolver,
+    types::{RoomEdges, RoomReceiver, RoomSender, RoomSize},
 };
 use crate::{
-    messaging,
-    messaging::traits::{Detach, ProvideProxy, Spawn},
+    messaging::{
+        error::SpawnError,
+        functions::resolve_receiver,
+        traits::{Detach, ProvideProxy, Raise, Spawn},
+    },
     Id,
 };
 use anyhow::Result;
@@ -41,18 +47,15 @@ impl Default for Room {
     }
 }
 
-impl Clone for Room {
-    fn clone(&self) -> Self {
-        Room {
-            id: self.id,
-            title: self.title.clone(),
-            description: self.description.clone(),
-            size: self.size,
-            edges: self.edges,
-            sender: self.sender.clone(),
-            receiver: None,
-            resolver: None,
-        }
+impl Raise<RoomEvent> for Room {
+    fn sender(&self) -> RoomSender {
+        self.sender.clone()
+    }
+
+    fn raise(&self, event: RoomEvent) -> Result<()> {
+        self.sender.send(event)?;
+
+        Ok(())
     }
 }
 
@@ -66,24 +69,20 @@ where
         let resolver = self
             .resolver
             .take()
-            .ok_or_else(|| RoomError::NoResolver(self.id))?;
+            .ok_or_else(|| SpawnError::NoResolver(format!("room id {}", self.id)))?;
 
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| RoomError::NoReceiver(self.id))?;
+            .ok_or_else(|| SpawnError::NoReceiver(format!("room id {}", self.id)))?;
 
-        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
     }
 }
 
-impl ProvideProxy<RoomProxy> for Room {
-    fn provide_proxy(&self) -> RoomProxy {
-        RoomProxy::from(&self)
-    }
-}
+impl ProvideProxy<RoomProxy> for Room {}
 
 impl Room {
     pub fn new(
@@ -124,14 +123,14 @@ impl Room {
         let _ = self.resolver.insert(RoomResolver::new(&self));
     }
 
-    pub fn hydrate_edges(&mut self, rooms: &HashMap<Id, RoomSender>) {
+    pub fn hydrate_edges(&mut self, rooms: &HashMap<Id, RoomProxy>) {
         let edge_senders = self
             .edges
             .iter()
             .map(|edge_id| {
                 if let Some(edge_id) = edge_id {
-                    if let Some(room_sender) = rooms.get(edge_id) {
-                        Some(room_sender.clone())
+                    if let Some(room) = rooms.get(edge_id) {
+                        Some(room.clone())
                     } else {
                         panic!(
                             "attempted to hydrate edge for room id {} with invalid room id {}",
@@ -145,7 +144,7 @@ impl Room {
             })
             .collect::<Vec<_>>();
 
-        if let Some(matcher) = &mut self.resolver {
+        if let Some(resolver) = &mut self.resolver {
             let edges_slice = &edge_senders[..];
 
             let edges = [
@@ -163,7 +162,7 @@ impl Room {
                 edges_slice[11].clone(),
             ];
 
-            matcher.replace_edges(edges);
+            resolver.replace_edges(edges);
         }
     }
 
@@ -185,10 +184,6 @@ impl Room {
 
     pub fn edges(&self) -> RoomEdges<Id> {
         self.edges
-    }
-
-    pub fn sender(&self) -> RoomSender {
-        self.sender.clone()
     }
 }
 

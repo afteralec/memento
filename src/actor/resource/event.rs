@@ -1,4 +1,4 @@
-use super::{super::model::Actor, ActorResourceReplySender};
+use super::{super::model::Actor, types::ActorResourceReplySender};
 use crate::Id;
 use thiserror::Error;
 

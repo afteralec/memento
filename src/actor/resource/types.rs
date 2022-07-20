@@ -1,4 +1,4 @@
-use super::{ActorResourceEvent, ActorResourceReplyEvent};
+use super::event::{ActorResourceEvent, ActorResourceReplyEvent};
 use tokio::sync::{mpsc, oneshot};
 
 pub type ActorResourceSender = mpsc::UnboundedSender<ActorResourceEvent>;

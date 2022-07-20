@@ -6,11 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-merchant = { path = "../merchant" }
 anyhow = "1.0.58"
 thiserror = "1.0.31"
 async-trait = "0.1.56"
-tokio = { version = "1.19.2", features = ["net", "rt-multi-thread", "sync", "signal", "time"] }
+tokio = { version = "1.19.2", features = ["macros", "net", "rt-multi-thread", "sync", "signal", "time"] }
 tokio-util = { version = "0.7", features = ["full"] }
 futures = { version = "0.3.0", features = ["thread-pool"]}
 

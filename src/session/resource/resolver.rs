@@ -1,6 +1,6 @@
 use super::{
-    super::model::Session, functions::create::create_session, SessionResourceError,
-    SessionResourceEvent, SessionResourceSender,
+    super::model::Session, error::SessionResourceError, event::SessionResourceEvent,
+    functions::create::create_session, types::SessionResourceSender,
 };
 use crate::{
     actor::resource::ActorResourceSender, auth::resource::AuthResourceSender, messaging,

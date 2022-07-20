@@ -1,4 +1,4 @@
-use super::{Session, SessionResourceError, SessionResourceEvent};
+use super::{interface::Session, error::SessionResourceError, event::SessionResourceEvent};
 use crate::{
     actor::ActorResourceSender,
     auth::{

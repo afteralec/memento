@@ -13,9 +13,6 @@ pub(crate) mod actor {
         pub(crate) mod resolver;
         pub(crate) mod types;
 
-        pub(crate) use error::ActorResourceError;
-        pub(crate) use resolver::ActorResourceResolver;
-
         pub use event::{ActorResourceEvent, ActorResourceReplyEvent};
         pub use interface::ActorResource;
         pub use types::{
@@ -27,17 +24,12 @@ pub(crate) mod actor {
 
 pub(crate) mod auth {
     pub mod resource {
-        pub(crate) mod client;
-        pub(crate) mod error;
         pub(crate) mod event;
         pub(crate) mod interface;
+        pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
 
-        pub(crate) use error::AuthResourceError;
-        pub(crate) use resolver::AuthResourceResolver;
-
-        pub use client::AuthClient;
         pub use event::{
             AuthRequest, AuthResourceEvent, AuthResourceReplyEvent, AuthResponse, Credential,
         };
@@ -51,15 +43,12 @@ pub(crate) mod auth {
     pub(crate) mod traits;
 }
 
-pub(crate) mod delay {
-    pub(crate) mod state;
-}
-
 pub(crate) mod keywords {
     pub(crate) mod util;
 }
 
 pub mod messaging {
+    pub mod error;
     pub mod functions;
     pub mod traits;
 }
@@ -67,43 +56,38 @@ pub mod messaging {
 pub(crate) mod player {
     pub(crate) mod model {
         pub(crate) mod error;
-        pub(crate) mod interface;
-        pub(crate) mod resolver;
-        pub(crate) mod types;
-
-        pub use interface::Player;
-    }
-
-    pub(crate) mod resource {
-        pub(crate) mod error;
-        pub(crate) mod event;
-        pub(crate) mod interface;
-        pub(crate) mod resolver;
-        pub(crate) mod types;
-
-        pub(crate) use error::PlayerResourceError;
-        pub(crate) use resolver::PlayerResourceResolver;
-
-        pub use event::{PlayerResourceEvent, PlayerResourceReplyEvent};
-        pub use interface::PlayerResource;
-        pub use types::{
-            PlayerResourceReceiver, PlayerResourceReplyReceiver, PlayerResourceReplySender,
-            PlayerResourceSender,
-        };
-    }
-}
-
-pub(crate) mod room {
-    pub(crate) mod model {
-        pub(crate) mod delay;
-        pub(crate) mod error;
         pub(crate) mod event;
         pub(crate) mod interface;
         pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
 
-        pub use error::RoomError;
+        pub use event::PlayerEvent;
+        pub use interface::Player;
+    }
+
+    pub(crate) mod resource {
+        pub(crate) mod event;
+        pub(crate) mod interface;
+        pub(crate) mod proxy;
+        pub(crate) mod resolver;
+        pub(crate) mod types;
+
+        pub(crate) use event::{PlayerResourceEvent, PlayerResourceReplyEvent};
+        pub(crate) use types::{PlayerResourceReplyReceiver, PlayerResourceSender};
+
+        pub use interface::PlayerResource;
+    }
+}
+
+pub(crate) mod room {
+    pub(crate) mod model {
+        pub(crate) mod event;
+        pub(crate) mod interface;
+        pub(crate) mod proxy;
+        pub(crate) mod resolver;
+        pub(crate) mod types;
+
         pub use event::RoomEvent;
         pub use interface::Room;
         pub use proxy::RoomProxy;
@@ -112,13 +96,12 @@ pub(crate) mod room {
     }
 
     pub(crate) mod resource {
-        pub(crate) mod error;
         pub(crate) mod event;
         pub(crate) mod interface;
+        pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
 
-        pub use error::RoomResourceError;
         pub use event::{RoomResourceEvent, RoomResourceReplyEvent};
         pub use interface::RoomResource;
         pub use resolver::RoomResourceResolver;
@@ -139,7 +122,6 @@ pub(crate) mod session {
         pub(crate) mod resolver;
         pub(crate) mod types;
 
-        pub(crate) use error::SessionError;
         pub use event::SessionEvent;
         pub use interface::Session;
         pub use resolver::SessionResolver;
@@ -156,6 +138,7 @@ pub(crate) mod session {
             pub use steps::{actor_step, auth_step, player_step, room_step};
         }
         pub(crate) mod interface;
+        pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
 

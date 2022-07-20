@@ -1,11 +1,18 @@
 use super::{
-    SessionResourceError, SessionResourceReceiver, SessionResourceResolver, SessionResourceSender,
+    error::SessionResourceError,
+    event::SessionResourceEvent,
+    proxy::SessionResourceProxy,
+    resolver::SessionResourceResolver,
+    types::{SessionResourceReceiver, SessionResourceSender},
 };
 use crate::{
     actor::resource::ActorResourceSender,
     auth::resource::AuthResourceSender,
-    messaging,
-    messaging::traits::{Detach, Spawn},
+    messaging::{
+        error::SpawnError,
+        functions::resolve_receiver,
+        traits::{Detach, ProvideProxy, Proxy, Raise, Spawn},
+    },
     player::resource::PlayerResourceSender,
     room::resource::RoomResourceSender,
 };
@@ -32,6 +39,18 @@ impl Default for SessionResource {
     }
 }
 
+impl Raise<SessionResourceEvent> for SessionResource {
+    fn sender(&self) -> SessionResourceSender {
+        self.sender.clone()
+    }
+
+    fn raise(&self, event: SessionResourceEvent) -> Result<()> {
+        self.sender.send(event)?;
+
+        Ok(())
+    }
+}
+
 impl Spawn for SessionResource {}
 
 impl Detach for SessionResource
@@ -39,27 +58,31 @@ where
     Self: Spawn,
 {
     fn detach(&mut self) -> Result<()> {
-        tracing::info!("Spawning Session Resource...");
-
         let resolver = self
             .resolver
             .take()
-            .ok_or_else(|| SessionResourceError::NoResolver)?;
+            .ok_or_else(|| SpawnError::NoResolver("session resource".to_owned()))?;
 
         if !resolver.configured_for_spawn() {
-            return Err(Error::new(SessionResourceError::ResolverMisconfigured));
+            return Err(Error::new(SpawnError::ResolverMisconfigured(
+                "session resource".to_owned(),
+            )));
         };
 
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| SessionResourceError::NoReceiver)?;
+            .ok_or_else(|| SpawnError::NoReceiver("session resource".to_owned()))?;
 
-        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
-
-        tracing::info!("Session Resource spawned successfully");
+        self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
+    }
+}
+
+impl ProvideProxy<SessionResourceProxy> for SessionResource {
+    fn proxy(&self) -> SessionResourceProxy {
+        SessionResourceProxy::proxy(&self)
     }
 }
 
@@ -68,10 +91,6 @@ impl SessionResource {
         SessionResource {
             ..Default::default()
         }
-    }
-
-    pub fn sender(&self) -> SessionResourceSender {
-        self.sender.clone()
     }
 
     pub fn set_auth_resource_sender(&mut self, sender: AuthResourceSender) {

@@ -1,10 +1,14 @@
 use super::{
-    super::model::Room, RoomResourceError, RoomResourceReceiver, RoomResourceResolver,
-    RoomResourceSender,
+    super::model::Room,
+    event::RoomResourceEvent,
+    proxy::RoomResourceProxy,
+    resolver::RoomResourceResolver,
+    types::{RoomResourceReceiver, RoomResourceSender},
 };
-use crate::{
-    messaging,
-    messaging::traits::{Detach, Spawn},
+use crate::messaging::{
+    error::SpawnError,
+    functions::resolve_receiver,
+    traits::{Detach, ProvideProxy, Proxy, Raise, Spawn},
 };
 use anyhow::{Error, Result};
 use std::default::Default;
@@ -29,6 +33,18 @@ impl Default for RoomResource {
     }
 }
 
+impl Raise<RoomResourceEvent> for RoomResource {
+    fn sender(&self) -> RoomResourceSender {
+        self.sender.clone()
+    }
+
+    fn raise(&self, event: RoomResourceEvent) -> Result<()> {
+        self.sender.send(event)?;
+
+        Ok(())
+    }
+}
+
 impl Spawn for RoomResource {}
 
 impl Detach for RoomResource
@@ -36,25 +52,27 @@ where
     Self: Spawn,
 {
     fn detach(&mut self) -> Result<()> {
-        tracing::info!("Spawning Room Resource...");
-
         self.detach_all()?;
 
         let resolver = self
             .resolver
             .take()
-            .ok_or_else(|| RoomResourceError::NoResolver)?;
+            .ok_or_else(|| SpawnError::NoResolver("room resource".to_owned()))?;
 
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| RoomResourceError::NoReceiver)?;
+            .ok_or_else(|| SpawnError::NoReceiver("room resource".to_owned()))?;
 
-        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
-
-        tracing::info!("Room Resource spawned successfully");
+        self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
+    }
+}
+
+impl ProvideProxy<RoomResourceProxy> for RoomResource {
+    fn proxy(&self) -> RoomResourceProxy {
+        RoomResourceProxy::proxy(&self)
     }
 }
 
@@ -66,17 +84,15 @@ impl RoomResource {
         }
     }
 
-    pub fn sender(&self) -> RoomResourceSender {
-        self.sender.clone()
-    }
-
     pub fn detach_all(&mut self) -> Result<()> {
         if let Some(resolver) = self.resolver.as_mut() {
             resolver.detach_all()?;
 
             Ok(())
         } else {
-            Err(Error::new(RoomResourceError::NoResolver))
+            Err(Error::new(SpawnError::NoResolver(
+                "room resource".to_owned(),
+            )))
         }
     }
 }

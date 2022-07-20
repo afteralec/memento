@@ -1,4 +1,4 @@
-use super::{super::model::RoomProxy, RoomResourceReplySender};
+use super::{super::model::RoomProxy, types::RoomResourceReplySender};
 use crate::Id;
 use thiserror::Error;
 

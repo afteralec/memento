@@ -1,10 +1,14 @@
 use super::{
-    super::model::Player, PlayerResourceError, PlayerResourceEvent, PlayerResourceReceiver,
-    PlayerResourceResolver, PlayerResourceSender,
+    super::model::Player,
+    event::PlayerResourceEvent,
+    proxy::PlayerResourceProxy,
+    resolver::PlayerResourceResolver,
+    types::{PlayerResourceReceiver, PlayerResourceSender},
 };
-use crate::{
-    messaging,
-    messaging::traits::{Detach, Spawn},
+use crate::messaging::{
+    error::SpawnError,
+    functions::resolve_receiver,
+    traits::{Detach, ProvideProxy, Proxy, Raise, Spawn},
 };
 use anyhow::Result;
 use std::default::Default;
@@ -28,6 +32,18 @@ impl Default for PlayerResource {
     }
 }
 
+impl Raise<PlayerResourceEvent> for PlayerResource {
+    fn sender(&self) -> PlayerResourceSender {
+        self.sender.clone()
+    }
+
+    fn raise(&self, event: PlayerResourceEvent) -> Result<()> {
+        self.sender.send(event)?;
+
+        Ok(())
+    }
+}
+
 impl Spawn for PlayerResource {}
 
 impl Detach for PlayerResource
@@ -40,18 +56,24 @@ where
         let resolver = self
             .resolver
             .take()
-            .ok_or_else(|| PlayerResourceError::NoResolver)?;
+            .ok_or_else(|| SpawnError::NoResolver("player resource".to_owned()))?;
 
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| PlayerResourceError::NoReceiver)?;
+            .ok_or_else(|| SpawnError::NoReceiver("player resource".to_owned()))?;
 
-        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
+        self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
         tracing::info!("Player Resource spawned successfully");
 
         Ok(())
+    }
+}
+
+impl ProvideProxy<PlayerResourceProxy> for PlayerResource {
+    fn proxy(&self) -> PlayerResourceProxy {
+        PlayerResourceProxy::proxy(&self)
     }
 }
 
@@ -61,15 +83,5 @@ impl PlayerResource {
             resolver: Some(PlayerResourceResolver::new(player_iter)),
             ..Default::default()
         }
-    }
-
-    pub fn send(&self, event: PlayerResourceEvent) -> Result<()> {
-        self.sender.send(event)?;
-
-        Ok(())
-    }
-
-    pub fn sender(&self) -> PlayerResourceSender {
-        self.sender.clone()
     }
 }

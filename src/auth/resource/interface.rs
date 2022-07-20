@@ -1,10 +1,13 @@
 use super::{
-    super::traits::AuthClient, AuthResourceError, AuthResourceEvent, AuthResourceReceiver,
-    AuthResourceResolver, AuthResourceSender,
+    super::traits::AuthClient,
+    event::AuthResourceEvent,
+    resolver::AuthResourceResolver,
+    types::{AuthResourceReceiver, AuthResourceSender},
 };
-use crate::{
-    messaging,
-    messaging::traits::{Detach, Spawn},
+use crate::messaging::{
+    error::SpawnError,
+    functions::resolve_receiver,
+    traits::{Detach, Raise, Spawn},
 };
 
 use anyhow::Result;
@@ -14,7 +17,7 @@ use tokio::sync::mpsc;
 #[derive(Debug)]
 pub struct AuthResource<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     sender: AuthResourceSender,
     receiver: Option<AuthResourceReceiver>,
@@ -23,7 +26,7 @@ where
 
 impl<T> Default for AuthResource<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     fn default() -> Self {
         let (sender, receiver) = mpsc::unbounded_channel();
@@ -36,29 +39,40 @@ where
     }
 }
 
-impl<T> Spawn for AuthResource<T> where T: 'static + Send + Sync + Debug + AuthClient + Default {}
+impl<T> Raise<AuthResourceEvent> for AuthResource<T>
+where
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
+{
+    fn raise(&self, event: AuthResourceEvent) -> Result<()> {
+        self.sender.send(event)?;
+
+        Ok(())
+    }
+
+    fn sender(&self) -> AuthResourceSender {
+        self.sender.clone()
+    }
+}
+
+impl<T> Spawn for AuthResource<T> where T: 'static + Send + Sync + Debug + Default + AuthClient {}
 
 impl<T> Detach for AuthResource<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
     Self: Spawn,
 {
     fn detach(&mut self) -> Result<()> {
-        tracing::info!("Spawning Auth Resource...");
-
         let resolver = self
             .resolver
             .take()
-            .ok_or_else(|| AuthResourceError::NoResolver)?;
+            .ok_or_else(|| SpawnError::NoResolver("auth resource".to_owned()))?;
 
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| AuthResourceError::NoReceiver)?;
+            .ok_or_else(|| SpawnError::NoReceiver("auth resource".to_owned()))?;
 
-        self.spawn_and_trace(messaging::functions::resolve_receiver(receiver, resolver));
-
-        tracing::info!("Auth Resource spawned successfully");
+        self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
     }
@@ -66,22 +80,12 @@ where
 
 impl<T> AuthResource<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     pub fn new(client: T) -> Self {
         AuthResource {
             resolver: Some(AuthResourceResolver::new(client)),
             ..Default::default()
         }
-    }
-
-    pub fn send(&self, event: AuthResourceEvent) -> Result<()> {
-        self.sender.send(event)?;
-
-        Ok(())
-    }
-
-    pub fn sender(&self) -> AuthResourceSender {
-        self.sender.clone()
     }
 }

@@ -1,27 +1,31 @@
 use super::{
     error::PlayerError,
-    types::{PlayerReceiver, PlayerSink, PlayerWriter},
+    event::PlayerEvent,
+    resolver::PlayerResolver,
+    types::{PlayerReceiver, PlayerSender},
 };
 use crate::{
     keywords::util::Keywords,
-    session::model::{SessionEvent, SessionSender},
+    messaging::{
+        error::SpawnError,
+        functions::resolve_receiver,
+        traits::{Detach, Raise, Spawn},
+    },
     Id,
 };
 use anyhow::{Error, Result};
 use std::{collections::HashMap, default::Default};
-
-pub type Names = HashMap<Id, String>;
+use tokio::sync::mpsc;
 
 #[derive(Debug)]
 pub struct Player {
     id: Id,
-    names: Names,
+    names: HashMap<Id, String>,
     keywords: Keywords,
     current_actor_id: Option<Id>,
-    sink: Option<PlayerSink>,
-    writer: Option<PlayerWriter>,
+    sender: PlayerSender,
     receiver: Option<PlayerReceiver>,
-    session_sender: Option<SessionSender>,
+    resolver: Option<PlayerResolver>,
 }
 
 impl Clone for Player {
@@ -31,26 +35,58 @@ impl Clone for Player {
             names: self.names.clone(),
             keywords: self.keywords.clone(),
             current_actor_id: self.current_actor_id.clone(),
-            sink: None,
-            writer: None,
+            sender: self.sender.clone(),
             receiver: None,
-            session_sender: None,
+            resolver: None,
         }
     }
 }
 
 impl Default for Player {
     fn default() -> Self {
+        let (sender, receiver) = mpsc::unbounded_channel();
+
         Player {
             id: Id::new(0),
-            names: Names::default(),
+            names: HashMap::default(),
             keywords: Keywords::default(),
             current_actor_id: None,
-            sink: None,
-            writer: None,
-            receiver: None,
-            session_sender: None,
+            sender,
+            receiver: Some(receiver),
+            resolver: Some(PlayerResolver::default()),
         }
+    }
+}
+
+impl Raise<PlayerEvent> for Player {
+    fn sender(&self) -> PlayerSender {
+        self.sender.clone()
+    }
+
+    fn raise(&self, event: PlayerEvent) -> Result<()> {
+        self.sender.send(event)?;
+
+        Ok(())
+    }
+}
+
+impl Spawn for Player {}
+
+impl Detach for Player {
+    fn detach(&mut self) -> Result<()> {
+        let resolver = self
+            .resolver
+            .take()
+            .ok_or_else(|| SpawnError::NoResolver(format!("player id {}", self.id)))?;
+
+        let receiver = self
+            .receiver
+            .take()
+            .ok_or_else(|| SpawnError::NoReceiver(format!("player id {}", self.id)))?;
+
+        self.spawn_and_trace(resolve_receiver(receiver, resolver));
+
+        Ok(())
     }
 }
 
@@ -66,6 +102,18 @@ impl Player {
         self.id
     }
 
+    pub fn names(&self) -> HashMap<Id, String> {
+        self.names.clone()
+    }
+
+    pub fn keywords(&self) -> Keywords {
+        self.keywords.clone()
+    }
+
+    pub fn current_actor_id(&self) -> Option<Id> {
+        self.current_actor_id.clone()
+    }
+
     pub fn assign_ownership(&mut self, id: &Id) -> Result<()> {
         if let Some(owned_id) = &self.current_actor_id {
             Err(Error::new(PlayerError::AlreadyAssigned(
@@ -77,36 +125,8 @@ impl Player {
         }
     }
 
-    pub fn attach_sink(&mut self, sink: PlayerSink) {
-        let _ = self.sink.insert(sink);
-    }
-
-    pub fn attach_writer(&mut self, writer: PlayerWriter) {
-        let _ = self.writer.insert(writer);
-    }
-
     pub fn get_current_actor_id(&self) -> Option<Id> {
         self.current_actor_id
-    }
-
-    pub fn write(&self, string: &str) -> Result<()> {
-        if let Some(writer) = &self.writer {
-            writer.send(string.to_owned())?;
-
-            Ok(())
-        } else {
-            Err(Error::new(PlayerError::NoWriter(self.id)))
-        }
-    }
-
-    pub fn send(&self, event: SessionEvent) -> Result<()> {
-        if let Some(session_sender) = &self.session_sender {
-            session_sender.send(event)?;
-
-            Ok(())
-        } else {
-            Err(Error::new(PlayerError::NoSessionSender(self.id)))
-        }
     }
 
     pub fn add_name(&mut self, id: &Id, name: &str) {

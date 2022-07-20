@@ -1,4 +1,7 @@
-use super::{super::traits::AuthClient, AuthRequest, AuthResourceEvent, AuthResourceReplyEvent};
+use super::{
+    super::traits::AuthClient,
+    event::{AuthRequest, AuthResourceEvent, AuthResourceReplyEvent},
+};
 use crate::messaging::traits::Resolver;
 use anyhow::Result;
 use async_trait::async_trait;
@@ -7,14 +10,14 @@ use std::{default::Default, fmt::Debug};
 #[derive(Debug)]
 pub struct AuthResourceResolver<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     state: AuthResourceState<T>,
 }
 
 impl<T> Default for AuthResourceResolver<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     fn default() -> Self {
         AuthResourceResolver {
@@ -26,7 +29,7 @@ where
 #[async_trait]
 impl<T> Resolver<AuthResourceEvent> for AuthResourceResolver<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     fn resolve_on(&mut self, event: AuthResourceEvent) -> Result<()> {
         match event {
@@ -50,7 +53,7 @@ where
 
 impl<T> AuthResourceResolver<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     pub fn new(client: T) -> Self {
         AuthResourceResolver {
@@ -62,14 +65,14 @@ where
 #[derive(Debug)]
 pub struct AuthResourceState<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     client: T,
 }
 
 impl<T> Default for AuthResourceState<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     fn default() -> Self {
         AuthResourceState {
@@ -80,7 +83,7 @@ where
 
 impl<T> AuthResourceState<T>
 where
-    T: 'static + Send + Sync + Debug + AuthClient + Default,
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     pub fn new(client: T) -> Self {
         AuthResourceState { client }

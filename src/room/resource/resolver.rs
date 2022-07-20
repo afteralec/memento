@@ -1,6 +1,5 @@
-use super::{RoomResourceEvent, RoomResourceReplyEvent};
+use super::event::{RoomResourceEvent, RoomResourceReplyEvent};
 use crate::{
-    messaging,
     messaging::traits::{Detach, ProvideProxy, Resolver},
     room::model::Room,
     Id,
@@ -28,10 +27,7 @@ impl Resolver<RoomResourceEvent> for RoomResourceResolver {
         match event {
             RoomResourceEvent::GetRoomById(id, reply_sender) => {
                 if let Some(room) = self.state.rooms.get(&id) {
-                    reply_sender.send(RoomResourceReplyEvent::GotRoomById(
-                        id,
-                        room.provide_proxy(),
-                    ))?;
+                    reply_sender.send(RoomResourceReplyEvent::GotRoomById(id, room.proxy()))?;
                 } else {
                     reply_sender.send(RoomResourceReplyEvent::NoRoomAtId(id))?;
                 }
@@ -87,23 +83,26 @@ impl RoomResourceState {
             ..Default::default()
         };
 
-        room_resource_state.hydrate_room_edges();
+        room_resource_state.hydrate();
 
         room_resource_state
     }
 
+    fn hydrate(&mut self) {
+        self.hydrate_room_edges();
+    }
+
     fn hydrate_room_edges(&mut self) {
-        let room_senders =
-            &self
-                .rooms
-                .iter()
-                .fold(HashMap::new(), |mut room_senders, (room_id, room)| {
-                    room_senders.insert(*room_id, room.sender());
-                    room_senders
-                });
+        let rooms = &self
+            .rooms
+            .iter()
+            .fold(HashMap::new(), |mut room_senders, (room_id, room)| {
+                room_senders.insert(*room_id, room.proxy());
+                room_senders
+            });
 
         for room in self.rooms.values_mut() {
-            room.hydrate_edges(&room_senders);
+            room.hydrate_edges(&rooms);
         }
     }
 

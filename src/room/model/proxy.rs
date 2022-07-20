@@ -1,8 +1,15 @@
-use super::{Room, RoomEdges, RoomSender, RoomSize};
-use crate::{messaging::traits::Proxy, Id};
+use super::{
+    event::RoomEvent,
+    interface::Room,
+    types::{RoomEdges, RoomSender, RoomSize},
+};
+use crate::{
+    messaging::traits::{Proxy, Raise},
+    Id,
+};
+use anyhow::Result;
 
-// @TODO: Look into use Arc to provide read access across threads to the same data
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RoomProxy {
     id: Id,
     title: String,
@@ -12,10 +19,20 @@ pub struct RoomProxy {
     sender: RoomSender,
 }
 
-impl Proxy for RoomProxy {}
+impl Raise<RoomEvent> for RoomProxy {
+    fn sender(&self) -> RoomSender {
+        self.sender.clone()
+    }
 
-impl RoomProxy {
-    pub fn from(room: &Room) -> Self {
+    fn raise(&self, event: RoomEvent) -> Result<()> {
+        self.sender.send(event)?;
+
+        Ok(())
+    }
+}
+
+impl Proxy<Room> for RoomProxy {
+    fn proxy(room: &Room) -> Self {
         RoomProxy {
             id: room.id(),
             title: room.title(),
@@ -24,5 +41,27 @@ impl RoomProxy {
             edges: room.edges(),
             sender: room.sender(),
         }
+    }
+}
+
+impl RoomProxy {
+    pub fn id(&self) -> Id {
+        self.id
+    }
+
+    pub fn title(&self) -> String {
+        self.title.to_owned()
+    }
+
+    pub fn description(&self) -> String {
+        self.description.to_owned()
+    }
+
+    pub fn size(&self) -> RoomSize {
+        self.size
+    }
+
+    pub fn edges(&self) -> RoomEdges<Id> {
+        self.edges
     }
 }

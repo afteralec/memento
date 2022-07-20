@@ -1,4 +1,4 @@
-use super::{super::model::Player, PlayerResourceReplySender};
+use super::{super::model::Player, types::PlayerResourceReplySender};
 use crate::Id;
 use thiserror::Error;
 

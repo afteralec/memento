@@ -1,4 +1,4 @@
-use super::AuthResourceReplySender;
+use super::types::AuthResourceReplySender;
 use crate::Id;
 use thiserror::Error;
 

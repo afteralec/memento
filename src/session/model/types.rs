@@ -1,4 +1,4 @@
-use super::SessionEvent;
+use super::event::SessionEvent;
 use tokio::sync::mpsc;
 
 pub type SessionSender = mpsc::UnboundedSender<SessionEvent>;

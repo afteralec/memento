@@ -1,4 +1,4 @@
-use super::{error::SessionStateError, SessionEvent};
+use super::{error::SessionStateError, event::SessionEvent};
 use crate::{messaging::traits::Resolver, room::model::Room, Id};
 use anyhow::{Error, Result};
 use async_trait::async_trait;

@@ -79,11 +79,10 @@ pub async fn create_session(
     .await?;
 
     // Split the player's Lines into Stream and Writer
-    let (sink, stream) = lines.split();
+    // let (sink, stream) = lines.split();
 
-    player.attach_sink(sink);
     // Attach the player to the Actor
-    actor.attach_player(&player)?;
+    // actor.attach_player(&player)?;
 
     Ok(())
 }

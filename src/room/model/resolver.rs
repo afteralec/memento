@@ -1,8 +1,7 @@
-use super::delay::RoomDelayState;
 use crate::{
     actor, keywords,
     messaging::traits::Resolver,
-    room::model::{Room, RoomEdges, RoomEvent, RoomSender, RoomSize},
+    room::model::{Room, RoomEdges, RoomEvent, RoomProxy, RoomSize},
     Id,
 };
 use anyhow::Result;
@@ -40,7 +39,7 @@ impl RoomResolver {
         }
     }
 
-    pub fn replace_edges(&mut self, edges: RoomEdges<RoomSender>) {
+    pub fn replace_edges(&mut self, edges: RoomEdges<RoomProxy>) {
         self.state.replace_edges(edges);
     }
 }
@@ -53,9 +52,8 @@ pub struct RoomState {
     title: String,
     description: String,
     size: RoomSize,
-    edges: RoomEdges<RoomSender>,
+    edges: RoomEdges<RoomProxy>,
     keywords: keywords::util::Keywords,
-    delays: RoomDelayState,
     actors: RoomActors,
 }
 
@@ -69,7 +67,7 @@ impl RoomState {
         }
     }
 
-    pub fn replace_edges(&mut self, edges: RoomEdges<RoomSender>) {
+    pub fn replace_edges(&mut self, edges: RoomEdges<RoomProxy>) {
         self.edges = [
             edges[0].clone(),
             edges[1].clone(),
@@ -86,13 +84,13 @@ impl RoomState {
         ];
     }
 
-    pub fn set_edges(&mut self, edges: &[(usize, &Option<RoomSender>)]) {
+    pub fn set_edges(&mut self, edges: &[(usize, &Option<RoomProxy>)]) {
         for (edge_index, edge) in edges {
             self.set_edge(edge_index, *edge);
         }
     }
 
-    pub fn set_edge(&mut self, edge_index: &usize, edge: &Option<RoomSender>) {
+    pub fn set_edge(&mut self, edge_index: &usize, edge: &Option<RoomProxy>) {
         if *edge_index > 11 {
             panic!(
                 "attempted to update_edge for invalid edge_index {}",
@@ -119,7 +117,6 @@ impl Default for RoomState {
                 None, None, None, None, None, None, None, None, None, None, None, None,
             ],
             keywords: keywords::util::Keywords::default(),
-            delays: RoomDelayState::default(),
             actors: RoomActors::default(),
         }
     }

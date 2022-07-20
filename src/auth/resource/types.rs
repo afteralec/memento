@@ -1,4 +1,4 @@
-use super::{AuthResourceEvent, AuthResourceReplyEvent};
+use super::event::{AuthResourceEvent, AuthResourceReplyEvent};
 use tokio::sync::{mpsc, oneshot};
 
 pub type AuthResourceSender = mpsc::UnboundedSender<AuthResourceEvent>;

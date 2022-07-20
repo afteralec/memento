@@ -1,4 +1,7 @@
-use super::{super::model::Actor, ActorResourceEvent, ActorResourceReplyEvent};
+use super::{
+    super::model::Actor,
+    event::{ActorResourceEvent, ActorResourceReplyEvent},
+};
 use crate::{messaging::traits::Resolver, Id};
 use anyhow::Result;
 use async_trait::async_trait;
