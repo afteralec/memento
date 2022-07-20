@@ -3,8 +3,8 @@ use super::{
     functions::create::create_session, types::SessionResourceSender,
 };
 use crate::{
-    actor::resource::ActorResourceSender, auth::resource::AuthResourceSender, messaging,
-    messaging::traits::Resolver, player::resource::PlayerResourceSender,
+    actor::resource::ActorResourceSender, auth::resource::AuthResourceSender,
+    messaging::traits::{Resolver, Spawn}, player::resource::PlayerResourceSender,
     room::resource::RoomResourceSender, Id,
 };
 use anyhow::{Error, Result};
@@ -23,6 +23,8 @@ impl Default for SessionResourceResolver {
         }
     }
 }
+
+impl Spawn for SessionResourceResolver {}
 
 #[async_trait]
 impl Resolver<SessionResourceEvent> for SessionResourceResolver {
@@ -81,7 +83,7 @@ impl Resolver<SessionResourceEvent> for SessionResourceResolver {
                         ))
                     })?;
 
-                let _ = messaging::functions::spawn_and_trace(create_session(
+                let _ = self.spawn_and_trace(create_session(
                     (lines, addr),
                     (
                         session_resource_sender,

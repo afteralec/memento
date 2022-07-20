@@ -116,7 +116,6 @@ pub(crate) mod server;
 
 pub(crate) mod session {
     pub(crate) mod model {
-        pub(crate) mod error;
         pub(crate) mod event;
         pub(crate) mod interface;
         pub(crate) mod resolver;

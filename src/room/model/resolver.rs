@@ -84,13 +84,13 @@ impl RoomState {
         ];
     }
 
-    pub fn set_edges(&mut self, edges: &[(usize, &Option<RoomProxy>)]) {
+    pub fn _set_edges(&mut self, edges: &[(usize, &Option<RoomProxy>)]) {
         for (edge_index, edge) in edges {
-            self.set_edge(edge_index, *edge);
+            self._set_edge(edge_index, *edge);
         }
     }
 
-    pub fn set_edge(&mut self, edge_index: &usize, edge: &Option<RoomProxy>) {
+    pub fn _set_edge(&mut self, edge_index: &usize, edge: &Option<RoomProxy>) {
         if *edge_index > 11 {
             panic!(
                 "attempted to update_edge for invalid edge_index {}",
@@ -99,10 +99,6 @@ impl RoomState {
         };
 
         self.edges[*edge_index] = edge.clone()
-    }
-
-    pub fn id(&self) -> Id {
-        self.id
     }
 }
 
