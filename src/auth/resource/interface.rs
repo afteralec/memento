@@ -1,13 +1,14 @@
 use super::{
     super::traits::AuthClient,
     event::AuthResourceEvent,
+    proxy::AuthResourceProxy,
     resolver::AuthResourceResolver,
     types::{AuthResourceReceiver, AuthResourceSender},
 };
 use crate::messaging::{
-    error::SpawnError,
+    error::DetachError,
     functions::resolve_receiver,
-    traits::{Detach, Raise, Spawn},
+    traits::{Detach, ProvideProxy, Raise, Spawn},
 };
 
 use anyhow::Result;
@@ -62,20 +63,25 @@ where
     Self: Spawn,
 {
     fn detach(&mut self) -> Result<()> {
-        let resolver = self
-            .resolver
-            .take()
-            .ok_or_else(|| SpawnError::NoResolver("auth resource".to_owned()))?;
-
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| SpawnError::NoReceiver("auth resource".to_owned()))?;
+            .ok_or_else(|| DetachError::NoReceiver("auth resource".to_owned()))?;
+
+        let resolver = self
+            .resolver
+            .take()
+            .ok_or_else(|| DetachError::NoResolver("auth resource".to_owned()))?;
 
         self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
     }
+}
+
+impl<T> ProvideProxy<AuthResourceProxy> for AuthResource<T> where
+    T: 'static + Send + Sync + Debug + Default + AuthClient
+{
 }
 
 impl<T> AuthResource<T>

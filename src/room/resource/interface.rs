@@ -6,7 +6,7 @@ use super::{
     types::{RoomResourceReceiver, RoomResourceSender},
 };
 use crate::messaging::{
-    error::SpawnError,
+    error::DetachError,
     functions::resolve_receiver,
     traits::{Detach, ProvideProxy, Proxy, Raise, Spawn},
 };
@@ -54,15 +54,15 @@ where
     fn detach(&mut self) -> Result<()> {
         self.detach_all()?;
 
-        let resolver = self
-            .resolver
-            .take()
-            .ok_or_else(|| SpawnError::NoResolver("room resource".to_owned()))?;
-
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| SpawnError::NoReceiver("room resource".to_owned()))?;
+            .ok_or_else(|| DetachError::NoReceiver("room resource".to_owned()))?;
+
+        let resolver = self
+            .resolver
+            .take()
+            .ok_or_else(|| DetachError::NoResolver("room resource".to_owned()))?;
 
         self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
@@ -86,7 +86,7 @@ impl RoomResource {
 
             Ok(())
         } else {
-            Err(Error::new(SpawnError::NoResolver(
+            Err(Error::new(DetachError::NoResolver(
                 "room resource".to_owned(),
             )))
         }

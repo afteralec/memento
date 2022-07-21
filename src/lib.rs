@@ -2,6 +2,7 @@ pub(crate) mod actor {
     pub(crate) mod model {
         pub(crate) mod error;
         pub(crate) mod interface;
+        pub(crate) mod proxy;
 
         pub use interface::Actor;
     }
@@ -10,6 +11,7 @@ pub(crate) mod actor {
         pub(crate) mod error;
         pub(crate) mod event;
         pub(crate) mod interface;
+        pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
 
@@ -74,7 +76,7 @@ pub(crate) mod player {
         pub(crate) mod types;
 
         pub(crate) use event::{PlayerResourceEvent, PlayerResourceReplyEvent};
-        pub(crate) use types::{PlayerResourceReplyReceiver, PlayerResourceSender};
+        pub(crate) use types::PlayerResourceReplyReceiver;
 
         pub use interface::PlayerResource;
     }
@@ -118,7 +120,9 @@ pub(crate) mod session {
     pub(crate) mod model {
         pub(crate) mod event;
         pub(crate) mod interface;
+        pub(crate) mod proxy;
         pub(crate) mod resolver;
+        pub(crate) mod stream_resolver;
         pub(crate) mod types;
 
         pub use event::SessionEvent;
@@ -133,8 +137,6 @@ pub(crate) mod session {
         pub(crate) mod functions {
             pub(crate) mod create;
             pub(crate) mod steps;
-
-            pub use steps::{actor_step, auth_step, player_step, room_step};
         }
         pub(crate) mod interface;
         pub(crate) mod proxy;
@@ -186,10 +188,10 @@ pub mod tooling {
 use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
-pub struct Id(u64);
+pub struct Id(i64);
 
 impl Id {
-    pub fn new(id: u64) -> Self {
+    pub fn new(id: i64) -> Self {
         Id(id)
     }
 
@@ -197,7 +199,7 @@ impl Id {
         self.0 > 0
     }
 
-    pub fn val(&self) -> u64 {
+    pub fn val(&self) -> i64 {
         self.0
     }
 }

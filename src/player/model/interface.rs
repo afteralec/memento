@@ -8,7 +8,7 @@ use super::{
 use crate::{
     keywords::util::Keywords,
     messaging::{
-        error::SpawnError,
+        error::DetachError,
         functions::resolve_receiver,
         traits::{Detach, ProvideProxy, Raise, Spawn},
     },
@@ -75,15 +75,15 @@ impl Spawn for Player {}
 
 impl Detach for Player {
     fn detach(&mut self) -> Result<()> {
-        let resolver = self
-            .resolver
-            .take()
-            .ok_or_else(|| SpawnError::NoResolver(format!("player id {}", self.id)))?;
-
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| SpawnError::NoReceiver(format!("player id {}", self.id)))?;
+            .ok_or_else(|| DetachError::NoReceiver(format!("player id {}", self.id)))?;
+
+        let resolver = self
+            .resolver
+            .take()
+            .ok_or_else(|| DetachError::NoResolver(format!("player id {}", self.id)))?;
 
         self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
@@ -94,7 +94,7 @@ impl Detach for Player {
 impl ProvideProxy<PlayerProxy> for Player {}
 
 impl Player {
-    pub fn new(id: u64) -> Self {
+    pub fn new(id: i64) -> Self {
         Player {
             id: Id::new(id),
             ..Default::default()

@@ -109,7 +109,7 @@ impl RoomResourceState {
     pub fn detach_all(&mut self) -> Result<()> {
         tracing::info!("Spawning rooms from Room Resource");
 
-        let mut count: u64 = 0;
+        let mut count: i64 = 0;
         for room in self.rooms.values_mut() {
             room.detach()?;
             count += 1;

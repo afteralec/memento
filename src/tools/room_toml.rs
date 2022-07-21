@@ -44,12 +44,12 @@ fn read_toml_from_contents<'a, T: serde::Deserialize<'a>>(contents: &'a str) -> 
 
 #[derive(Debug, Deserialize)]
 struct RoomIds {
-    list: Vec<u64>,
+    list: Vec<i64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct RoomData {
-    id: u64,
+    id: i64,
     title: String,
     description: String,
     size: u8,
@@ -70,22 +70,22 @@ impl RoomData {
 
 #[derive(Debug, Deserialize)]
 struct RoomDataEdges {
-    northwest: Option<u64>,
-    north: Option<u64>,
-    northeast: Option<u64>,
-    east: Option<u64>,
-    southeast: Option<u64>,
-    south: Option<u64>,
-    southwest: Option<u64>,
-    west: Option<u64>,
-    r#in: Option<u64>,
-    out: Option<u64>,
-    up: Option<u64>,
-    down: Option<u64>,
+    northwest: Option<i64>,
+    north: Option<i64>,
+    northeast: Option<i64>,
+    east: Option<i64>,
+    southeast: Option<i64>,
+    south: Option<i64>,
+    southwest: Option<i64>,
+    west: Option<i64>,
+    r#in: Option<i64>,
+    out: Option<i64>,
+    up: Option<i64>,
+    down: Option<i64>,
 }
 
 impl RoomDataEdges {
-    pub fn to_slice(&self) -> [Option<u64>; 12] {
+    pub fn to_slice(&self) -> [Option<i64>; 12] {
         [
             self.northwest,
             self.north,
@@ -104,9 +104,9 @@ impl RoomDataEdges {
 }
 
 impl Index<&'_ usize> for RoomDataEdges {
-    type Output = Option<u64>;
+    type Output = Option<i64>;
 
-    fn index(&self, index: &usize) -> &Option<u64> {
+    fn index(&self, index: &usize) -> &Option<i64> {
         match index {
             0 => &self.northwest,
             1 => &self.north,

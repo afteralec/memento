@@ -44,12 +44,12 @@ fn read_toml_from_contents<'a, T: serde::Deserialize<'a>>(contents: &'a str) -> 
 
 #[derive(Debug, Deserialize)]
 struct ActorIds {
-    list: Vec<u64>,
+    list: Vec<i64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ActorData {
-    id: u64,
+    id: i64,
     gender: String,
     short_description: String,
     keywords: Vec<String>,

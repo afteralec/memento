@@ -1,7 +1,7 @@
 use super::super::error::{ActorStepError, PlayerStepError, RoomStepError};
 use crate::{
     actor::{
-        model::Actor,
+        model::proxy::ActorProxy,
         resource::{ActorResourceReplyEvent, ActorResourceReplyReceiver},
     },
     auth::resource::{AuthResourceReplyEvent, AuthResourceReplyReceiver, AuthResponse},
@@ -12,6 +12,10 @@ use crate::{
     room::{
         model::RoomProxy,
         resource::{RoomResourceReplyEvent, RoomResourceReplyReceiver},
+    },
+    session::{
+        model::proxy::SessionProxy,
+        resource::{event::SessionResourceReplyEvent, types::SessionResourceReplyReceiver},
     },
 };
 use anyhow::{Error, Result};
@@ -35,11 +39,12 @@ pub async fn player_step(receiver: PlayerResourceReplyReceiver) -> Result<Player
             PlayerResourceReplyEvent::NoPlayerAtId(id) => {
                 return Err(Error::new(PlayerStepError::NoPlayerFound(id)));
             }
+            _ => return Err(Error::new(PlayerStepError::WrongReplyReceived)),
         }
     }
 }
 
-pub async fn actor_step(receiver: ActorResourceReplyReceiver) -> Result<Actor> {
+pub async fn actor_step(receiver: ActorResourceReplyReceiver) -> Result<ActorProxy> {
     loop {
         match receiver.await? {
             ActorResourceReplyEvent::GotActorById(_, actor) => {
@@ -60,6 +65,16 @@ pub async fn room_step(receiver: RoomResourceReplyReceiver) -> Result<RoomProxy>
             }
             RoomResourceReplyEvent::NoRoomAtId(id) => {
                 return Err(Error::new(RoomStepError::NoRoomFound(id)));
+            }
+        }
+    }
+}
+
+pub async fn session_step(receiver: SessionResourceReplyReceiver) -> Result<SessionProxy> {
+    loop {
+        match receiver.await? {
+            SessionResourceReplyEvent::NewSession(session) => {
+                return Ok(session);
             }
         }
     }

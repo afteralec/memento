@@ -1,24 +1,28 @@
 use super::{
     super::error::{AuthStepError, PlayerStepError},
-    actor_step, auth_step, player_step, room_step,
+    steps::{actor_step, auth_step, player_step, room_step, session_step},
 };
 use crate::{
     actor::{
-        model::Actor,
-        resource::{ActorResourceEvent, ActorResourceSender},
+        model::proxy::ActorProxy,
+        resource::{proxy::ActorResourceProxy, ActorResourceEvent},
     },
     auth::resource::{
-        AuthRequest, AuthResourceEvent, AuthResourceSender, AuthResponse, Credential,
+        proxy::AuthResourceProxy, AuthRequest, AuthResourceEvent, AuthResponse, Credential,
     },
+    messaging::traits::Raise,
     player::{
         model::proxy::PlayerProxy,
-        resource::{PlayerResourceEvent, PlayerResourceSender},
+        resource::{proxy::PlayerResourceProxy, PlayerResourceEvent},
     },
     room::{
-        model::RoomProxy,
-        resource::{RoomResourceEvent, RoomResourceSender},
+        model::proxy::RoomProxy,
+        resource::{proxy::RoomResourceProxy, RoomResourceEvent},
     },
-    session::resource::SessionResourceSender,
+    session::{
+        model::{proxy::SessionProxy, types::SessionStream},
+        resource::{event::SessionResourceEvent, proxy::SessionResourceProxy},
+    },
     Id,
 };
 use anyhow::{Error, Result};
@@ -27,23 +31,23 @@ use std::net::SocketAddr;
 use tokio::{net::TcpStream, sync::oneshot};
 use tokio_util::codec::{Framed, LinesCodec};
 
-type ResourceSenders = (
-    SessionResourceSender,
-    AuthResourceSender,
-    PlayerResourceSender,
-    ActorResourceSender,
-    RoomResourceSender,
+type ResourceProxies = (
+    SessionResourceProxy,
+    AuthResourceProxy,
+    PlayerResourceProxy,
+    ActorResourceProxy,
+    RoomResourceProxy,
 );
 
 pub async fn create_session(
     (mut lines, addr): (Framed<TcpStream, LinesCodec>, SocketAddr),
     (
-        session_resource_sender,
-        auth_resource_sender,
-        player_resource_sender,
-        actor_resource_sender,
-        room_resource_sender,
-    ): ResourceSenders,
+        session_resource_proxy,
+        auth_resource_proxy,
+        player_resource_proxy,
+        actor_resource_proxy,
+        room_resource_proxy,
+    ): ResourceProxies,
 ) -> Result<()> {
     // @TODO: Extract this to a login screen async function that can be injected from outside
     lines.send("Please enter your username:").await?;
@@ -66,37 +70,51 @@ pub async fn create_session(
         }
     };
 
+    // Build the Credential from the username and password
     let credential = Credential::UserNameAndPassword(username, password);
 
+    // Split the player's Lines into Sink and Stream
+    let (sink, stream) = lines.split();
+
     // @TODO: Let this match on the underlying AuthStepError and PlayerStepError to redirect to the appropriate interface
-    let (mut actor, mut player, room) = resource_steps(
+    let (mut actor, player, room, session) = resource_steps(
+        stream,
         credential,
-        &auth_resource_sender,
-        &actor_resource_sender,
-        &player_resource_sender,
-        &room_resource_sender,
+        &auth_resource_proxy,
+        &actor_resource_proxy,
+        &player_resource_proxy,
+        &room_resource_proxy,
+        &session_resource_proxy,
     )
     .await?;
 
-    // Split the player's Lines into Stream and Writer
-    // let (sink, stream) = lines.split();
+    // Register the sink to the player
+    player.attach_sink(sink)?;
 
-    // Attach the player to the Actor
-    // actor.attach_player(&player)?;
+    // Attach the player to the actor
+    actor.attach_player(&player)?;
+
+    // Send the room to the session
+    session.new_room(&room)?;
+
+    // @TODO: Attach the player to the session and the actor to the room. Voila!
 
     Ok(())
 }
 
+// @TODO: Extract this to its own ResourceProxies struct
 async fn resource_steps(
+    stream: SessionStream,
     credential: Credential,
-    auth_resource_sender: &AuthResourceSender,
-    actor_resource_sender: &ActorResourceSender,
-    player_resource_sender: &PlayerResourceSender,
-    room_resource_sender: &RoomResourceSender,
-) -> Result<(Actor, PlayerProxy, RoomProxy)> {
+    auth_resource_proxy: &AuthResourceProxy,
+    actor_resource_proxy: &ActorResourceProxy,
+    player_resource_proxy: &PlayerResourceProxy,
+    room_resource_proxy: &RoomResourceProxy,
+    session_resource_proxy: &SessionResourceProxy,
+) -> Result<(ActorProxy, PlayerProxy, RoomProxy, SessionProxy)> {
+    // @TODO: Put this pattern of building oneshot channels and raising a resource event on the individual ResourceProxy instead
     let (auth_reply_sender, auth_reply_receiver) = oneshot::channel();
-
-    auth_resource_sender.send(AuthResourceEvent::Request(
+    auth_resource_proxy.raise(AuthResourceEvent::Request(
         AuthRequest::WithCredential(credential),
         auth_reply_sender,
     ))?;
@@ -108,7 +126,7 @@ async fn resource_steps(
     };
 
     let (player_reply_sender, player_reply_receiver) = oneshot::channel();
-    player_resource_sender.send(PlayerResourceEvent::GetPlayerById(
+    player_resource_proxy.raise(PlayerResourceEvent::GetPlayerById(
         player_id,
         player_reply_sender,
     ))?;
@@ -122,18 +140,23 @@ async fn resource_steps(
     };
 
     let (actor_reply_sender, actor_reply_receiver) = oneshot::channel();
-    actor_resource_sender.send(ActorResourceEvent::GetActorById(
+    actor_resource_proxy.raise(ActorResourceEvent::GetActorById(
         current_actor_id,
         actor_reply_sender,
     ))?;
     let actor = actor_step(actor_reply_receiver).await?;
 
     let (room_reply_sender, room_reply_receiver) = oneshot::channel();
-    room_resource_sender.send(RoomResourceEvent::GetRoomById(
+    room_resource_proxy.raise(RoomResourceEvent::GetRoomById(
+        // @TODO: Implement persistence so this gets the last known room ID of the player/actor instead
         Id::new(1),
         room_reply_sender,
     ))?;
     let room = room_step(room_reply_receiver).await?;
 
-    Ok((actor, player, room))
+    let (session_reply_sender, session_reply_receiver) = oneshot::channel();
+    session_resource_proxy.raise(SessionResourceEvent::NewSession(stream, session_reply_sender))?;
+    let session = session_step(session_reply_receiver).await?;
+
+    Ok((actor, player, room, session))
 }

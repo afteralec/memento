@@ -20,7 +20,13 @@ impl Default for SessionResolver {
 #[async_trait]
 impl Resolver<SessionEvent> for SessionResolver {
     fn resolve_on(&mut self, event: SessionEvent) -> Result<()> {
-        Ok(())
+        match event {
+            SessionEvent::NewRoom(room) => {
+                self.state.set_room(room);
+
+                Ok(())
+            }
+        }
     }
 
     async fn resolve_async(&mut self, _: SessionEvent) -> Result<()> {
@@ -37,8 +43,12 @@ pub struct SessionState {
 
 impl Default for SessionState {
     fn default() -> Self {
-        SessionState {
-            room: None,
-        }
+        SessionState { room: None }
+    }
+}
+
+impl SessionState {
+    pub fn set_room(&mut self, room: RoomProxy) {
+        let _ = self.room.insert(room);
     }
 }

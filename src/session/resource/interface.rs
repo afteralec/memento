@@ -1,20 +1,19 @@
 use super::{
-    error::SessionResourceError,
     event::SessionResourceEvent,
     proxy::SessionResourceProxy,
     resolver::SessionResourceResolver,
     types::{SessionResourceReceiver, SessionResourceSender},
 };
 use crate::{
-    actor::resource::ActorResourceSender,
-    auth::resource::AuthResourceSender,
+    actor::resource::proxy::ActorResourceProxy,
+    auth::resource::proxy::AuthResourceProxy,
     messaging::{
-        error::SpawnError,
+        error::DetachError,
         functions::resolve_receiver,
-        traits::{Detach, ProvideProxy, Proxy, Raise, Spawn},
+        traits::{Detach, ProvideProxy, Raise, Spawn},
     },
-    player::resource::PlayerResourceSender,
-    room::resource::RoomResourceSender,
+    player::resource::proxy::PlayerResourceProxy,
+    room::resource::proxy::RoomResourceProxy,
 };
 use anyhow::{Error, Result};
 use std::default::Default;
@@ -31,11 +30,15 @@ impl Default for SessionResource {
     fn default() -> Self {
         let (sender, receiver) = mpsc::unbounded_channel();
 
-        SessionResource {
+        let mut session_resource = SessionResource {
             sender,
             receiver: Some(receiver),
             resolver: Some(SessionResourceResolver::default()),
-        }
+        };
+
+        session_resource.hydrate_resolver_session_proxy();
+
+        session_resource
     }
 }
 
@@ -58,21 +61,21 @@ where
     Self: Spawn,
 {
     fn detach(&mut self) -> Result<()> {
-        let resolver = self
-            .resolver
-            .take()
-            .ok_or_else(|| SpawnError::NoResolver("session resource".to_owned()))?;
-
-        if !resolver.configured_for_spawn() {
-            return Err(Error::new(SpawnError::ResolverMisconfigured(
-                "session resource".to_owned(),
-            )));
-        };
-
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| SpawnError::NoReceiver("session resource".to_owned()))?;
+            .ok_or_else(|| DetachError::NoReceiver("session resource".to_owned()))?;
+
+        let resolver = self
+            .resolver
+            .take()
+            .ok_or_else(|| DetachError::NoResolver("session resource".to_owned()))?;
+
+        if !resolver.configured() {
+            return Err(Error::new(DetachError::ResolverMisconfigured(
+                "session resource".to_owned(),
+            )));
+        };
 
         self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
@@ -89,27 +92,35 @@ impl SessionResource {
         }
     }
 
-    pub fn set_auth_resource_sender(&mut self, sender: AuthResourceSender) {
+    pub fn set_auth_resource_proxy(&mut self, proxy: AuthResourceProxy) {
         if let Some(resolver) = self.resolver.as_mut() {
-            let _ = resolver.set_auth_resource_sender(sender);
+            let _ = resolver.set_auth_resource_proxy(proxy);
         }
     }
 
-    pub fn set_actor_resource_sender(&mut self, sender: ActorResourceSender) {
+    pub fn set_actor_resource_proxy(&mut self, proxy: ActorResourceProxy) {
         if let Some(resolver) = self.resolver.as_mut() {
-            let _ = resolver.set_actor_resource_sender(sender);
+            let _ = resolver.set_actor_resource_proxy(proxy);
         }
     }
 
-    pub fn set_player_resource_sender(&mut self, sender: PlayerResourceSender) {
+    pub fn set_player_resource_proxy(&mut self, proxy: PlayerResourceProxy) {
         if let Some(resolver) = self.resolver.as_mut() {
-            let _ = resolver.set_player_resource_sender(sender);
+            let _ = resolver.set_player_resource_proxy(proxy);
         }
     }
 
-    pub fn set_room_resource_sender(&mut self, sender: RoomResourceSender) {
+    pub fn set_room_resource_proxy(&mut self, proxy: RoomResourceProxy) {
         if let Some(resolver) = self.resolver.as_mut() {
-            let _ = resolver.set_room_resource_sender(sender);
+            let _ = resolver.set_room_resource_proxy(proxy);
+        }
+    }
+
+    fn hydrate_resolver_session_proxy(&mut self) {
+        let proxy = self.proxy();
+
+        if let Some(resolver) = self.resolver.as_mut() {
+            let _ = resolver.set_session_resource_proxy(proxy);
         }
     }
 }

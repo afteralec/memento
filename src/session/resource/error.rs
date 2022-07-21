@@ -19,6 +19,8 @@ pub enum PlayerStepError {
     NoPlayerFound(Id),
     #[error("player id {0} has no currently owned actor")]
     NoActorOwned(Id),
+    #[error("received wrong reply for player resource operation")]
+    WrongReplyReceived,
 }
 
 #[derive(Debug, Error)]

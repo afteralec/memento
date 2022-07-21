@@ -2,7 +2,10 @@ use super::{
     super::model::Player,
     event::{PlayerResourceEvent, PlayerResourceReplyEvent},
 };
-use crate::{messaging::traits::{ProvideProxy, Resolver}, Id};
+use crate::{
+    messaging::traits::{Detach, ProvideProxy, Resolver},
+    Id,
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use std::{collections::HashMap, default::Default};
@@ -28,6 +31,23 @@ impl Resolver<PlayerResourceEvent> for PlayerResourceResolver {
                 if let Some(player) = self.state.players.get(&id) {
                     reply_sender
                         .send(PlayerResourceReplyEvent::GotPlayerById(id, player.proxy()))?;
+                } else {
+                    reply_sender.send(PlayerResourceReplyEvent::NoPlayerAtId(id))?;
+                }
+
+                Ok(())
+            }
+            PlayerResourceEvent::DetachPlayerById(id, reply_sender) => {
+                if let Some(player) = self.state.players.get_mut(&id) {
+                    match player.detach() {
+                        Ok(_) => {
+                            reply_sender.send(PlayerResourceReplyEvent::PlayerDetached(id))?;
+                        }
+                        Err(_) => {
+                            reply_sender
+                                .send(PlayerResourceReplyEvent::PlayerAlreadyDetached(id))?;
+                        }
+                    };
                 } else {
                     reply_sender.send(PlayerResourceReplyEvent::NoPlayerAtId(id))?;
                 }

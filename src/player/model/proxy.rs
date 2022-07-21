@@ -1,4 +1,8 @@
-use super::{event::PlayerEvent, interface::Player, types::PlayerSender};
+use super::{
+    event::PlayerEvent,
+    interface::Player,
+    types::{PlayerSender, PlayerSink},
+};
 use crate::{
     keywords::util::Keywords,
     messaging::traits::{Proxy, Raise},
@@ -7,7 +11,7 @@ use crate::{
 use anyhow::Result;
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PlayerProxy {
     id: Id,
     names: HashMap<Id, String>,
@@ -47,5 +51,17 @@ impl PlayerProxy {
 
     pub fn current_actor_id(&self) -> Option<Id> {
         self.current_actor_id
+    }
+
+    pub fn write(&self, input: &str) -> Result<()> {
+        self.raise(PlayerEvent::Write(input.to_owned()))?;
+
+        Ok(())
+    }
+
+    pub fn attach_sink(&self, sink: PlayerSink) -> Result<()> {
+        self.raise(PlayerEvent::AttachSink(sink))?;
+
+        Ok(())
     }
 }

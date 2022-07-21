@@ -6,9 +6,9 @@ use super::{
     types::{PlayerResourceReceiver, PlayerResourceSender},
 };
 use crate::messaging::{
-    error::SpawnError,
+    error::DetachError,
     functions::resolve_receiver,
-    traits::{Detach, ProvideProxy, Proxy, Raise, Spawn},
+    traits::{Detach, ProvideProxy, Raise, Spawn},
 };
 use anyhow::Result;
 use std::default::Default;
@@ -51,21 +51,17 @@ where
     Self: Spawn,
 {
     fn detach(&mut self) -> Result<()> {
-        tracing::info!("Spawning Player Resource...");
+        let receiver = self
+            .receiver
+            .take()
+            .ok_or_else(|| DetachError::NoReceiver("player resource".to_owned()))?;
 
         let resolver = self
             .resolver
             .take()
-            .ok_or_else(|| SpawnError::NoResolver("player resource".to_owned()))?;
-
-        let receiver = self
-            .receiver
-            .take()
-            .ok_or_else(|| SpawnError::NoReceiver("player resource".to_owned()))?;
+            .ok_or_else(|| DetachError::NoResolver("player resource".to_owned()))?;
 
         self.spawn_and_trace(resolve_receiver(receiver, resolver));
-
-        tracing::info!("Player Resource spawned successfully");
 
         Ok(())
     }

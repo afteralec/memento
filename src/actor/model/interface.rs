@@ -1,23 +1,26 @@
-use super::error::ActorError;
-use crate::{player::model::Player, session::model::SessionEvent, Id};
-use anyhow::{Error, Result};
-
-#[derive(Debug, Clone)]
+use super::proxy::ActorProxy;
+use crate::{
+    messaging::traits::ProvideProxy,
+    Id,
+};
+#[derive(Debug)]
 pub struct Actor {
     id: Id,
     gender: Gender,
     short_description: String,
     keywords: Vec<String>,
-    player: Option<Player>,
 }
 
+impl ProvideProxy<ActorProxy> for Actor {}
+
 impl Actor {
-    pub fn new(id: u64, gender: &str, short_description: &str, keywords: &Vec<String>) -> Self {
+    pub fn new(id: i64, gender: &str, short_description: &str, keywords: &Vec<String>) -> Self {
         let gender = match &gender.to_lowercase()[..] {
             "nonbinary" => Gender::NonBinary,
             "male" => Gender::Male,
             "female" => Gender::Female,
             _ => {
+                // @TODO: Move this panic into actor loading and have the constructor require a valid Gender enum
                 panic!(
                     "invalid gender at creation of actor with id: {}, got invalid string: {}",
                     id, gender
@@ -30,7 +33,6 @@ impl Actor {
             gender,
             short_description: short_description.to_owned(),
             keywords: keywords.to_owned(),
-            player: None,
         }
     }
 
@@ -40,6 +42,14 @@ impl Actor {
 
     pub fn gender(&self) -> Gender {
         self.gender
+    }
+
+    pub fn short_description(&self) -> String {
+        self.short_description.clone()
+    }
+
+    pub fn keywords(&self) -> Vec<String> {
+        self.keywords.clone()
     }
 
     pub fn self_gendered(&self) -> String {
@@ -70,42 +80,6 @@ impl Actor {
 
     pub fn keyword_iter(&self) -> std::slice::Iter<String> {
         self.keywords.iter()
-    }
-
-    pub fn attach_player(&mut self, player: &Player) -> Result<()> {
-        if let Some(assigned_player) = &self.player {
-            Err(Error::new(ActorError::PlayerAlreadyAttached(
-                self.id,
-                player.id(),
-                assigned_player.id(),
-            )))
-        } else {
-            let _ = self.player.insert(player.clone());
-
-            Ok(())
-        }
-    }
-
-    pub fn unattach_player(&mut self) -> Option<Player> {
-        self.player.take()
-    }
-
-    pub fn write(&self, _string: &str) -> Result<()> {
-        if let Some(_player) = &self.player {
-            // player.write(string)?;
-
-            Ok(())
-        } else {
-            Err(Error::new(ActorError::NoPlayer(self.id)))
-        }
-    }
-
-    pub fn send(&self, _event: SessionEvent) -> Result<()> {
-        if let Some(_player) = &self.player {
-            Ok(())
-        } else {
-            Err(Error::new(ActorError::NoPlayer(self.id)))
-        }
     }
 }
 

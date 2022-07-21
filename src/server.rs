@@ -1,4 +1,7 @@
-use crate::session::resource::{SessionResourceEvent, SessionResourceSender};
+use crate::{
+    messaging::traits::Raise,
+    session::resource::{proxy::SessionResourceProxy, SessionResourceEvent},
+};
 use anyhow::Result;
 use thiserror::Error;
 use tokio::net;
@@ -8,7 +11,7 @@ use tokio_util::codec::{Framed, LinesCodec};
 pub struct Server {
     ip: String,
     port: String,
-    session_resource_sender: Option<SessionResourceSender>,
+    session_resource_proxy: Option<SessionResourceProxy>,
 }
 
 impl Server {
@@ -20,8 +23,8 @@ impl Server {
         }
     }
 
-    pub fn set_session_resource_sender(&mut self, sender: SessionResourceSender) {
-        let _ = self.session_resource_sender.insert(sender);
+    pub fn set_session_resource_proxy(&mut self, proxy: SessionResourceProxy) {
+        let _ = self.session_resource_proxy.insert(proxy);
     }
 
     pub fn addr(&self) -> String {
@@ -31,15 +34,14 @@ impl Server {
     pub fn listen(&mut self) -> Result<()> {
         let addr = self.addr();
 
-        let session_resource_sender = self
-            .session_resource_sender
+        let session_resource_proxy = self
+            .session_resource_proxy
             .as_ref()
-            .ok_or_else(|| anyhow::Error::new(ServerError::NoSessionResourceSender))?;
-
-        let session_resource_sender = session_resource_sender.clone();
+            .cloned()
+            .ok_or_else(|| anyhow::Error::new(ServerError::NoSessionResourceProxy))?;
 
         tokio::spawn(async move {
-            if let Err(err) = listen(addr, session_resource_sender).await {
+            if let Err(err) = listen(addr, session_resource_proxy).await {
                 // @TODO: Error handling
                 tracing::error!("{:?}", err);
             }
@@ -54,12 +56,12 @@ impl Default for Server {
         Server {
             ip: "127.0.0.1".to_owned(),
             port: "8080".to_owned(),
-            session_resource_sender: None,
+            session_resource_proxy: None,
         }
     }
 }
 
-pub async fn listen(addr: String, session_resource_sender: SessionResourceSender) -> Result<()> {
+pub async fn listen(addr: String, session_resource_proxy: SessionResourceProxy) -> Result<()> {
     let listener = net::TcpListener::bind(&addr).await?;
 
     tracing::info!("server running on {}", addr);
@@ -68,12 +70,12 @@ pub async fn listen(addr: String, session_resource_sender: SessionResourceSender
         let (stream, addr) = listener.accept().await?;
         let lines = Framed::new(stream, LinesCodec::new());
 
-        session_resource_sender.send(SessionResourceEvent::NewSession { lines, addr })?;
+        session_resource_proxy.raise(SessionResourceEvent::CreateSession { lines, addr })?;
     }
 }
 
 #[derive(Debug, Error)]
 pub enum ServerError {
-    #[error("attempted to start listening on server without a SessionResourceSender")]
-    NoSessionResourceSender,
+    #[error("attempted to start listening on server without a SessionResourceProxy")]
+    NoSessionResourceProxy,
 }

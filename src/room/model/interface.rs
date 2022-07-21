@@ -6,7 +6,7 @@ use super::{
 };
 use crate::{
     messaging::{
-        error::SpawnError,
+        error::DetachError,
         functions::resolve_receiver,
         traits::{Detach, ProvideProxy, Raise, Spawn},
     },
@@ -66,15 +66,15 @@ where
     Self: Spawn,
 {
     fn detach(&mut self) -> Result<()> {
-        let resolver = self
-            .resolver
-            .take()
-            .ok_or_else(|| SpawnError::NoResolver(format!("room id {}", self.id)))?;
-
         let receiver = self
             .receiver
             .take()
-            .ok_or_else(|| SpawnError::NoReceiver(format!("room id {}", self.id)))?;
+            .ok_or_else(|| DetachError::NoReceiver(format!("room id {}", self.id)))?;
+
+        let resolver = self
+            .resolver
+            .take()
+            .ok_or_else(|| DetachError::NoResolver(format!("room id {}", self.id)))?;
 
         self.spawn_and_trace(resolve_receiver(receiver, resolver));
 
@@ -86,11 +86,11 @@ impl ProvideProxy<RoomProxy> for Room {}
 
 impl Room {
     pub fn new(
-        id: u64,
+        id: i64,
         title: &str,
         description: &str,
         size: u8,
-        edges: [Option<u64>; 12],
+        edges: [Option<i64>; 12],
     ) -> Self {
         let mut room = Room {
             id: Id(id),
@@ -187,6 +187,6 @@ impl Room {
     }
 }
 
-fn make_id(id: Option<u64>) -> Option<Id> {
+fn make_id(id: Option<i64>) -> Option<Id> {
     Some(Id(id?))
 }

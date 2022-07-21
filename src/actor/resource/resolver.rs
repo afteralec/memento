@@ -2,7 +2,10 @@ use super::{
     super::model::Actor,
     event::{ActorResourceEvent, ActorResourceReplyEvent},
 };
-use crate::{messaging::traits::Resolver, Id};
+use crate::{
+    messaging::traits::{ProvideProxy, Resolver},
+    Id,
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use std::{collections::HashMap, default::Default};
@@ -26,7 +29,7 @@ impl Resolver<ActorResourceEvent> for ActorResourceResolver {
         match event {
             ActorResourceEvent::GetActorById(id, reply_sender) => {
                 if let Some(actor) = self.state.actors.get(&id) {
-                    reply_sender.send(ActorResourceReplyEvent::GotActorById(id, actor.clone()))?;
+                    reply_sender.send(ActorResourceReplyEvent::GotActorById(id, actor.proxy()))?;
                 } else {
                     reply_sender.send(ActorResourceReplyEvent::NoActorAtId(id))?;
                 }

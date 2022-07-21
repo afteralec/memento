@@ -33,6 +33,10 @@ impl Resolver<PlayerEvent> for PlayerResolver {
                     sink.send(item).await?;
                 }
             }
+            PlayerEvent::AttachSink(sink) => {
+                // @TODO: Should this raise an error if there is already a sink registered?
+                let _ = self.state.sink.insert(sink);
+            }
         };
 
         Ok(())

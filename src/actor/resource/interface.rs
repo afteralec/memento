@@ -1,12 +1,13 @@
 use super::{
     super::model::Actor,
     error::ActorResourceError,
+    proxy::ActorResourceProxy,
     resolver::ActorResourceResolver,
     types::{ActorResourceReceiver, ActorResourceSender},
 };
 use crate::messaging::{
     functions::resolve_receiver,
-    traits::{Detach, Spawn},
+    traits::{Detach, ProvideProxy, Spawn},
 };
 use anyhow::Result;
 use std::default::Default;
@@ -38,25 +39,23 @@ where
     Self: Spawn,
 {
     fn detach(&mut self) -> Result<()> {
-        tracing::info!("Spawning Actor Resource...");
+        let receiver = self
+            .receiver
+            .take()
+            .ok_or_else(|| ActorResourceError::NoReceiver)?;
 
         let resolver = self
             .resolver
             .take()
             .ok_or_else(|| ActorResourceError::NoResolver)?;
 
-        let receiver = self
-            .receiver
-            .take()
-            .ok_or_else(|| ActorResourceError::NoReceiver)?;
-
         self.spawn_and_trace(resolve_receiver(receiver, resolver));
-
-        tracing::info!("Actor Resource spawned successfully");
 
         Ok(())
     }
 }
+
+impl ProvideProxy<ActorResourceProxy> for ActorResource {}
 
 impl ActorResource {
     pub fn new(actor_iter: impl Iterator<Item = Actor>) -> Self {
