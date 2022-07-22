@@ -1,5 +1,8 @@
 use super::{event::SessionEvent, interface::Session, types::SessionSender};
-use crate::{messaging::traits::{Proxy, Raise}, room::model::proxy::RoomProxy};
+use crate::{
+    messaging::traits::{Proxy, Raise},
+    room::model::proxy::RoomProxy,
+};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]

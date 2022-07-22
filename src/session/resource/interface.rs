@@ -5,15 +5,12 @@ use super::{
     types::{SessionResourceReceiver, SessionResourceSender},
 };
 use crate::{
-    actor::resource::proxy::ActorResourceProxy,
-    auth::resource::proxy::AuthResourceProxy,
     messaging::{
         error::DetachError,
         functions::resolve_receiver,
         traits::{Detach, ProvideProxy, Raise, Spawn},
     },
-    player::resource::proxy::PlayerResourceProxy,
-    room::resource::proxy::RoomResourceProxy,
+    server::resource_proxy::ResourceProxies,
 };
 use anyhow::{Error, Result};
 use std::default::Default;
@@ -35,8 +32,6 @@ impl Default for SessionResource {
             receiver: Some(receiver),
             resolver: Some(SessionResourceResolver::default()),
         };
-
-        session_resource.hydrate_resolver_session_proxy();
 
         session_resource
     }
@@ -92,35 +87,9 @@ impl SessionResource {
         }
     }
 
-    pub fn set_auth_resource_proxy(&mut self, proxy: AuthResourceProxy) {
+    pub fn set_resource_proxies(&mut self, resource_proxies: ResourceProxies) {
         if let Some(resolver) = self.resolver.as_mut() {
-            let _ = resolver.set_auth_resource_proxy(proxy);
-        }
-    }
-
-    pub fn set_actor_resource_proxy(&mut self, proxy: ActorResourceProxy) {
-        if let Some(resolver) = self.resolver.as_mut() {
-            let _ = resolver.set_actor_resource_proxy(proxy);
-        }
-    }
-
-    pub fn set_player_resource_proxy(&mut self, proxy: PlayerResourceProxy) {
-        if let Some(resolver) = self.resolver.as_mut() {
-            let _ = resolver.set_player_resource_proxy(proxy);
-        }
-    }
-
-    pub fn set_room_resource_proxy(&mut self, proxy: RoomResourceProxy) {
-        if let Some(resolver) = self.resolver.as_mut() {
-            let _ = resolver.set_room_resource_proxy(proxy);
-        }
-    }
-
-    fn hydrate_resolver_session_proxy(&mut self) {
-        let proxy = self.proxy();
-
-        if let Some(resolver) = self.resolver.as_mut() {
-            let _ = resolver.set_session_resource_proxy(proxy);
-        }
+            resolver.set_resource_proxies(resource_proxies);
+        };
     }
 }

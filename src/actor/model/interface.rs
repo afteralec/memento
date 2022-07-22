@@ -1,8 +1,5 @@
 use super::proxy::ActorProxy;
-use crate::{
-    messaging::traits::ProvideProxy,
-    Id,
-};
+use crate::{messaging::traits::ProvideProxy, Id};
 #[derive(Debug)]
 pub struct Actor {
     id: Id,

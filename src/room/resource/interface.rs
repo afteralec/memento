@@ -8,7 +8,7 @@ use super::{
 use crate::messaging::{
     error::DetachError,
     functions::resolve_receiver,
-    traits::{Detach, ProvideProxy, Proxy, Raise, Spawn},
+    traits::{Detach, ProvideProxy, Raise, Spawn},
 };
 use anyhow::{Error, Result};
 use std::default::Default;

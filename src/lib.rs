@@ -75,7 +75,7 @@ pub(crate) mod player {
         pub(crate) mod resolver;
         pub(crate) mod types;
 
-        pub(crate) use event::{PlayerResourceEvent, PlayerResourceReplyEvent};
+        pub(crate) use event::PlayerResourceReplyEvent;
         pub(crate) use types::PlayerResourceReplyReceiver;
 
         pub use interface::PlayerResource;
@@ -114,7 +114,14 @@ pub(crate) mod room {
     }
 }
 
-pub(crate) mod server;
+pub mod server {
+    pub(crate) mod builder;
+    pub(crate) mod model;
+    pub(crate) mod resource_proxy;
+
+    pub mod init;
+    pub mod input;
+}
 
 pub(crate) mod session {
     pub(crate) mod model {
@@ -163,7 +170,7 @@ pub mod core {
         traits::AuthClient,
     };
 
-    pub use crate::server::Server;
+    pub use crate::server::model::Server;
 }
 pub mod model {
     pub use crate::actor::model::Actor;

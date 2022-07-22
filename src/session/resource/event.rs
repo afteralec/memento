@@ -1,4 +1,7 @@
-use super::{super::model::{proxy::SessionProxy, types::SessionStream}, types::SessionResourceReplySender};
+use super::{
+    super::model::{proxy::SessionProxy, types::SessionStream},
+    types::SessionResourceReplySender,
+};
 use std::net::SocketAddr;
 use thiserror::Error;
 use tokio::net::TcpStream;

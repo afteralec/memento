@@ -17,8 +17,7 @@ where
         resolver.resolve_on(event)?;
     }
 
-    //@TODO: Figure out how to reattach this receiver to the spawning struct
-
+    // @TODO: Figure out how to reattach this receiver to the spawning struct
     Ok(())
 }
 
@@ -33,24 +32,28 @@ where
     R: 'static + Send + Sync + fmt::Debug + Resolver<T>,
     S: 'static + Send + Sync + fmt::Debug + Resolver<String>,
 {
-    tokio::select!(
-         Some(event) = receiver.recv() => {
-             resolver.resolve_on(event)
-         }
-         input = stream.next() => match input {
-             Some(Ok(input)) => {
-                 stream_resolver.resolve_on(input)
-             },
-             Some(Err(_err)) => {
-                 // @TODO: Here, there is a LinesCodecError from the underlying SplitStream - handle it gracefully
-                 Ok(())
-             },
-             None => {
-                 // @TODO: Here, the stream is now closed - the player is disconnected. Handle this gracefully.
-                 Ok(())
+    loop {
+        tokio::select!(
+             Some(event) = receiver.recv() => {
+                 resolver.resolve_on(event)?;
              }
-         }
-    )
+             input = stream.next() => match input {
+                 Some(Ok(input)) => {
+                     stream_resolver.resolve_on(input)?;
+                 },
+                 Some(Err(_err)) => {
+                     // @TODO: Here, there is a LinesCodecError from the underlying SplitStream - handle it gracefully
+                     break;
+                 },
+                 None => {
+                     // @TODO: Here, the stream is now closed - the player is disconnected. Handle this gracefully.
+                     break;
+                 }
+             }
+        );
+    }
+
+    Ok(())
 }
 
 pub fn spawn_and_trace<F>(f: F) -> tokio::task::JoinHandle<()>
