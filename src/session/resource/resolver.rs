@@ -4,8 +4,10 @@ use super::{
     functions::create::create_session,
 };
 use crate::{
-    messaging::traits::{Detach, ProvideProxy, Resolver, Spawn},
-    server::resource_proxy::ResourceProxies,
+    messaging::{
+        functions::spawn_and_trace,
+        traits::{Detach, ProvideProxy, Resolver},
+    },
     Id,
 };
 use anyhow::Result;
@@ -26,24 +28,22 @@ impl Default for SessionResourceResolver {
     }
 }
 
-impl Spawn for SessionResourceResolver {}
-
 #[async_trait]
 impl Resolver<SessionResourceEvent> for SessionResourceResolver {
     fn resolve_on(&mut self, event: SessionResourceEvent) -> Result<()> {
         match event {
-            SessionResourceEvent::CreateSession { lines, addr } => {
-                let resource_proxies = self.state.resource_proxies.as_ref().ok_or_else(|| {
-                    panic!("No Resource Proxies interface present on SessionResource");
-                }).unwrap();
-
-                let _ = self.spawn_and_trace(create_session((lines, addr), resource_proxies.clone()));
+            SessionResourceEvent::CreateSession {
+                lines,
+                addr,
+                resource_proxies,
+            } => {
+                spawn_and_trace(create_session((lines, addr), resource_proxies));
 
                 Ok(())
             }
-            SessionResourceEvent::NewSession(stream, reply_sender) => {
+            SessionResourceEvent::NewSession(reply_sender) => {
                 let id = self.state.id_gen.next_id();
-                let mut session = Session::new(id, stream);
+                let mut session = Session::new(id);
                 session.detach()?;
 
                 let session_proxy = session.proxy();
@@ -64,19 +64,8 @@ impl Resolver<SessionResourceEvent> for SessionResourceResolver {
     }
 }
 
-impl SessionResourceResolver {
-    pub fn configured(&self) -> bool {
-        self.state.resource_proxies.is_some()
-    }
-
-    pub fn set_resource_proxies(&mut self, resource_proxies: ResourceProxies) {
-        self.state.set_resource_proxies(resource_proxies);
-    }
-}
-
 #[derive(Debug)]
 pub struct SessionResourceState {
-    resource_proxies: Option<ResourceProxies>,
     sessions: HashMap<Id, Session>,
     id_gen: SequenceGenerator,
 }
@@ -84,15 +73,8 @@ pub struct SessionResourceState {
 impl Default for SessionResourceState {
     fn default() -> Self {
         SessionResourceState {
-            resource_proxies: None,
             sessions: HashMap::default(),
             id_gen: SequenceGenerator::default(),
         }
-    }
-}
-
-impl SessionResourceState {
-    pub fn set_resource_proxies(&mut self, resource_proxies: ResourceProxies) {
-        let _ = self.resource_proxies.insert(resource_proxies);
     }
 }

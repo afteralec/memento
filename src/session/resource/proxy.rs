@@ -1,7 +1,7 @@
 use super::{
     event::SessionResourceEvent, interface::SessionResource, types::SessionResourceSender,
 };
-use crate::messaging::traits::{Proxy, Raise};
+use crate::messaging::traits::{Detach, Proxy, Raise};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
@@ -18,10 +18,6 @@ impl Proxy<SessionResource> for SessionResourceProxy {
 }
 
 impl Raise<SessionResourceEvent> for SessionResourceProxy {
-    fn sender(&self) -> SessionResourceSender {
-        self.sender.clone()
-    }
-
     fn raise(&self, event: SessionResourceEvent) -> Result<()> {
         self.sender.send(event)?;
 

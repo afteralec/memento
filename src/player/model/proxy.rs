@@ -5,7 +5,7 @@ use super::{
 };
 use crate::{
     keywords::util::Keywords,
-    messaging::traits::{Proxy, Raise},
+    messaging::traits::{Detach, Proxy, Raise},
     Id,
 };
 use anyhow::Result;
@@ -21,10 +21,6 @@ pub struct PlayerProxy {
 }
 
 impl Raise<PlayerEvent> for PlayerProxy {
-    fn sender(&self) -> PlayerSender {
-        self.sender.clone()
-    }
-
     fn raise(&self, event: PlayerEvent) -> Result<()> {
         self.sender.send(event)?;
 

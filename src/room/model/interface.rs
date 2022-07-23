@@ -7,8 +7,8 @@ use super::{
 use crate::{
     messaging::{
         error::DetachError,
-        functions::resolve_receiver,
-        traits::{Detach, ProvideProxy, Raise, Spawn},
+        functions::{resolve_receiver, spawn_and_trace},
+        traits::{Detach, ProvideProxy, Raise},
     },
     Id,
 };
@@ -48,10 +48,6 @@ impl Default for Room {
 }
 
 impl Raise<RoomEvent> for Room {
-    fn sender(&self) -> RoomSender {
-        self.sender.clone()
-    }
-
     fn raise(&self, event: RoomEvent) -> Result<()> {
         self.sender.send(event)?;
 
@@ -59,12 +55,11 @@ impl Raise<RoomEvent> for Room {
     }
 }
 
-impl Spawn for Room {}
+impl Detach<RoomEvent> for Room {
+    fn sender(&self) -> RoomSender {
+        self.sender.clone()
+    }
 
-impl Detach for Room
-where
-    Self: Spawn,
-{
     fn detach(&mut self) -> Result<()> {
         let receiver = self
             .receiver
@@ -76,7 +71,7 @@ where
             .take()
             .ok_or_else(|| DetachError::NoResolver(format!("room id {}", self.id)))?;
 
-        self.spawn_and_trace(resolve_receiver(receiver, resolver));
+        spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
     }

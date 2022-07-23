@@ -7,8 +7,8 @@ use super::{
 };
 use crate::messaging::{
     error::DetachError,
-    functions::resolve_receiver,
-    traits::{Detach, ProvideProxy, Raise, Spawn},
+    functions::{resolve_receiver, spawn_and_trace},
+    traits::{Detach, ProvideProxy, Raise},
 };
 
 use anyhow::Result;
@@ -49,19 +49,16 @@ where
 
         Ok(())
     }
+}
 
+impl<T> Detach<AuthResourceEvent> for AuthResource<T>
+where
+    T: 'static + Send + Sync + Debug + Default + AuthClient,
+{
     fn sender(&self) -> AuthResourceSender {
         self.sender.clone()
     }
-}
 
-impl<T> Spawn for AuthResource<T> where T: 'static + Send + Sync + Debug + Default + AuthClient {}
-
-impl<T> Detach for AuthResource<T>
-where
-    T: 'static + Send + Sync + Debug + Default + AuthClient,
-    Self: Spawn,
-{
     fn detach(&mut self) -> Result<()> {
         let receiver = self
             .receiver
@@ -73,7 +70,7 @@ where
             .take()
             .ok_or_else(|| DetachError::NoResolver("auth resource".to_owned()))?;
 
-        self.spawn_and_trace(resolve_receiver(receiver, resolver));
+        spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
     }

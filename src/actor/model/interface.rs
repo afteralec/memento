@@ -1,17 +1,25 @@
 use super::proxy::ActorProxy;
 use crate::{messaging::traits::ProvideProxy, Id};
+
 #[derive(Debug)]
 pub struct Actor {
     id: Id,
     gender: Gender,
     short_description: String,
     keywords: Vec<String>,
+    last_room_id: Option<Id>,
 }
 
 impl ProvideProxy<ActorProxy> for Actor {}
 
 impl Actor {
-    pub fn new(id: i64, gender: &str, short_description: &str, keywords: &Vec<String>) -> Self {
+    pub fn new(
+        id: i64,
+        gender: &str,
+        short_description: &str,
+        keywords: &Vec<String>,
+        last_room_id: Option<Id>,
+    ) -> Self {
         let gender = match &gender.to_lowercase()[..] {
             "nonbinary" => Gender::NonBinary,
             "male" => Gender::Male,
@@ -30,6 +38,7 @@ impl Actor {
             gender,
             short_description: short_description.to_owned(),
             keywords: keywords.to_owned(),
+            last_room_id,
         }
     }
 
@@ -47,6 +56,10 @@ impl Actor {
 
     pub fn keywords(&self) -> Vec<String> {
         self.keywords.clone()
+    }
+
+    pub fn last_room_id(&self) -> Option<Id> {
+        self.last_room_id
     }
 
     pub fn self_gendered(&self) -> String {

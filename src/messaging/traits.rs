@@ -17,14 +17,27 @@ pub trait Raise<T>
 where
     T: 'static + Send + Sync + Debug,
 {
-    fn sender(&self) -> mpsc::UnboundedSender<T>;
-
     fn raise(&self, event: T) -> Result<()>;
 }
 
 // @TODO: Get this to return any needed structs back to the caller out of the Future
-pub trait Detach {
+pub trait Detach<T>
+where
+    T: 'static + Send + Sync + Debug,
+{
+    fn sender(&self) -> mpsc::UnboundedSender<T>;
+
     fn detach(&mut self) -> Result<()>;
+}
+
+pub trait NewDetach<E, RV>
+where
+    E: 'static + Send + Sync + Debug,
+    RV: 'static + Send + Sync + Resolver<E>,
+{
+    fn sender(&self) -> mpsc::UnboundedSender<E>;
+
+    fn detach(&mut self) -> Result<(mpsc::UnboundedReceiver<E>, RV)>;
 }
 
 pub trait Spawn {

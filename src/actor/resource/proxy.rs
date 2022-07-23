@@ -1,5 +1,5 @@
 use super::{event::ActorResourceEvent, interface::ActorResource, types::ActorResourceSender};
-use crate::messaging::traits::{Proxy, Raise};
+use crate::messaging::traits::{Detach, Proxy, Raise};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
@@ -16,10 +16,6 @@ impl Proxy<ActorResource> for ActorResourceProxy {
 }
 
 impl Raise<ActorResourceEvent> for ActorResourceProxy {
-    fn sender(&self) -> ActorResourceSender {
-        self.sender.clone()
-    }
-
     fn raise(&self, event: ActorResourceEvent) -> Result<()> {
         self.sender.send(event)?;
 

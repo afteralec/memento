@@ -2,7 +2,7 @@ use super::{
     super::traits::AuthClient, event::AuthResourceEvent, interface::AuthResource,
     types::AuthResourceSender,
 };
-use crate::messaging::traits::{Proxy, Raise};
+use crate::messaging::traits::{Detach, Proxy, Raise};
 use anyhow::Result;
 use core::fmt::Debug;
 
@@ -12,10 +12,6 @@ pub struct AuthResourceProxy {
 }
 
 impl Raise<AuthResourceEvent> for AuthResourceProxy {
-    fn sender(&self) -> AuthResourceSender {
-        self.sender.clone()
-    }
-
     fn raise(&self, event: AuthResourceEvent) -> Result<()> {
         self.sender.send(event)?;
 

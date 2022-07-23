@@ -1,6 +1,6 @@
 use super::{event::SessionEvent, interface::Session, types::SessionSender};
 use crate::{
-    messaging::traits::{Proxy, Raise},
+    messaging::traits::{Detach, Proxy, Raise},
     room::model::proxy::RoomProxy,
 };
 use anyhow::Result;
@@ -19,10 +19,6 @@ impl Proxy<Session> for SessionProxy {
 }
 
 impl Raise<SessionEvent> for SessionProxy {
-    fn sender(&self) -> SessionSender {
-        self.sender.clone()
-    }
-
     fn raise(&self, event: SessionEvent) -> Result<()> {
         self.sender.send(event)?;
 

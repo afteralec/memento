@@ -1,5 +1,5 @@
 use super::{event::RoomResourceEvent, interface::RoomResource, types::RoomResourceSender};
-use crate::messaging::traits::{Proxy, Raise};
+use crate::messaging::traits::{Detach, Proxy, Raise};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
@@ -16,10 +16,6 @@ impl Proxy<RoomResource> for RoomResourceProxy {
 }
 
 impl Raise<RoomResourceEvent> for RoomResourceProxy {
-    fn sender(&self) -> RoomResourceSender {
-        self.sender.clone()
-    }
-
     fn raise(&self, event: RoomResourceEvent) -> Result<()> {
         self.sender.send(event)?;
 

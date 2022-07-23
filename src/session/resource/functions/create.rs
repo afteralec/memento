@@ -5,14 +5,12 @@ use super::{
 use crate::{
     actor::{model::proxy::ActorProxy, resource::event::ActorResourceEvent},
     auth::resource::event::{AuthRequest, AuthResourceEvent, AuthResponse, Credential},
-    messaging::traits::Raise,
+    messaging::{functions::spawn_and_trace, traits::Raise},
     player::{model::proxy::PlayerProxy, resource::event::PlayerResourceEvent},
     room::{model::proxy::RoomProxy, resource::event::RoomResourceEvent},
-    session::{
-        model::{proxy::SessionProxy, types::SessionStream},
-        resource::event::SessionResourceEvent,
-    },
     server::resource_proxy::ResourceProxies,
+    session::{model::proxy::SessionProxy, resource::event::SessionResourceEvent},
+    stream::{resolve::resolve_stream, resolver::StreamResolver, types::Stream},
     Id,
 };
 use anyhow::{Error, Result};
@@ -72,7 +70,7 @@ pub async fn create_session(
 
 // @TODO: Extract this to its own ResourceProxies struct
 async fn resource_steps(
-    stream: SessionStream,
+    stream: Stream,
     credential: Credential,
     resource_proxies: &ResourceProxies,
 ) -> Result<(ActorProxy, PlayerProxy, RoomProxy, SessionProxy)> {
@@ -116,12 +114,19 @@ async fn resource_steps(
         ))?;
     let actor = actor_step(actor_reply_receiver).await?;
 
+    let last_room_id = if let Some(last_room_id) = actor.last_room_id() {
+        last_room_id
+    } else {
+        // @TODO: This means this is probably a new character that never made it to a room;
+        //   engage a flow to find the correct room to send them to
+        Id::new(1)
+    };
+
     let (room_reply_sender, room_reply_receiver) = oneshot::channel();
     resource_proxies
         .room_resource_proxy
         .raise(RoomResourceEvent::GetRoomById(
-            // @TODO: Implement persistence so this gets the last known room ID of the player/actor instead
-            Id::new(1),
+            last_room_id,
             room_reply_sender,
         ))?;
     let room = room_step(room_reply_receiver).await?;
@@ -129,11 +134,11 @@ async fn resource_steps(
     let (session_reply_sender, session_reply_receiver) = oneshot::channel();
     resource_proxies
         .session_resource_proxy
-        .raise(SessionResourceEvent::NewSession(
-            stream,
-            session_reply_sender,
-        ))?;
+        .raise(SessionResourceEvent::NewSession(session_reply_sender))?;
     let session = session_step(session_reply_receiver).await?;
+    let stream_resolver = StreamResolver::new(&session);
+
+    spawn_and_trace(resolve_stream(stream, stream_resolver));
 
     Ok((actor, player, room, session))
 }

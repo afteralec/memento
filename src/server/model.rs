@@ -2,9 +2,9 @@ use super::{builder::ServerBuilder, resource_proxy::ResourceProxies};
 use crate::{
     actor::resource::ActorResource,
     core::AuthClient,
-    messaging::traits::{Detach, Raise},
+    messaging::traits::{Detach, ProvideProxy, Raise},
     resource::{AuthResource, PlayerResource, RoomResource, SessionResource},
-    session::resource::{proxy::SessionResourceProxy, SessionResourceEvent},
+    session::resource::SessionResourceEvent,
 };
 use anyhow::Result;
 use std::fmt::Debug;
@@ -23,7 +23,6 @@ where
     pub(crate) player_resource: PlayerResource,
     pub(crate) room_resource: RoomResource,
     pub(crate) session_resource: SessionResource,
-    pub(crate) resource_proxies: ResourceProxies,
 }
 
 impl<T> Server<T>
@@ -51,10 +50,16 @@ where
     pub fn listen(&mut self) -> Result<()> {
         let addr = self.addr();
 
-        let session_resource_proxy = self.resource_proxies.session_resource_proxy.clone();
+        let resource_proxies = ResourceProxies::builder()
+            .actor_resource_proxy(self.actor_resource.proxy())
+            .auth_resource_proxy(self.auth_resource.proxy())
+            .player_resource_proxy(self.player_resource.proxy())
+            .room_resource_proxy(self.room_resource.proxy())
+            .session_resource_proxy(self.session_resource.proxy())
+            .build();
 
         tokio::spawn(async move {
-            if let Err(err) = listen(addr, session_resource_proxy).await {
+            if let Err(err) = listen(addr, resource_proxies).await {
                 // @TODO: Error handling
                 tracing::error!("{:?}", err);
             }
@@ -64,7 +69,7 @@ where
     }
 }
 
-pub async fn listen(addr: String, session_resource_proxy: SessionResourceProxy) -> Result<()> {
+pub async fn listen(addr: String, resource_proxies: ResourceProxies) -> Result<()> {
     let listener = net::TcpListener::bind(&addr).await?;
 
     tracing::info!("server running on {}", addr);
@@ -73,6 +78,12 @@ pub async fn listen(addr: String, session_resource_proxy: SessionResourceProxy) 
         let (stream, addr) = listener.accept().await?;
         let lines = Framed::new(stream, LinesCodec::new());
 
-        session_resource_proxy.raise(SessionResourceEvent::CreateSession { lines, addr })?;
+        resource_proxies
+            .session_resource_proxy
+            .raise(SessionResourceEvent::CreateSession {
+                lines,
+                addr,
+                resource_proxies: resource_proxies.clone(),
+            })?;
     }
 }

@@ -7,8 +7,8 @@ use super::{
 };
 use crate::messaging::{
     error::DetachError,
-    functions::resolve_receiver,
-    traits::{Detach, ProvideProxy, Raise, Spawn},
+    functions::{resolve_receiver, spawn_and_trace},
+    traits::{Detach, ProvideProxy, Raise},
 };
 use anyhow::Result;
 use std::default::Default;
@@ -33,10 +33,6 @@ impl Default for PlayerResource {
 }
 
 impl Raise<PlayerResourceEvent> for PlayerResource {
-    fn sender(&self) -> PlayerResourceSender {
-        self.sender.clone()
-    }
-
     fn raise(&self, event: PlayerResourceEvent) -> Result<()> {
         self.sender.send(event)?;
 
@@ -44,12 +40,11 @@ impl Raise<PlayerResourceEvent> for PlayerResource {
     }
 }
 
-impl Spawn for PlayerResource {}
+impl Detach<PlayerResourceEvent> for PlayerResource {
+    fn sender(&self) -> PlayerResourceSender {
+        self.sender.clone()
+    }
 
-impl Detach for PlayerResource
-where
-    Self: Spawn,
-{
     fn detach(&mut self) -> Result<()> {
         let receiver = self
             .receiver
@@ -61,7 +56,7 @@ where
             .take()
             .ok_or_else(|| DetachError::NoResolver("player resource".to_owned()))?;
 
-        self.spawn_and_trace(resolve_receiver(receiver, resolver));
+        spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
     }

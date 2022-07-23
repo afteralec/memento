@@ -1,9 +1,9 @@
 use super::traits::Resolver;
+use crate::stream::types::Stream;
 use anyhow::Result;
-use futures::{stream::SplitStream, StreamExt};
+use futures::StreamExt;
 use std::fmt;
-use tokio::{macros::support::Future, net::TcpStream, sync::mpsc};
-use tokio_util::codec::{Framed, LinesCodec};
+use tokio::{macros::support::Future, sync::mpsc};
 
 pub async fn resolve_receiver<T, R>(
     mut receiver: mpsc::UnboundedReceiver<T>,
@@ -22,7 +22,7 @@ where
 }
 
 pub async fn resolve_stream_and_receiver<T, R, S>(
-    mut stream: SplitStream<Framed<TcpStream, LinesCodec>>,
+    mut stream: Stream,
     mut stream_resolver: S,
     mut receiver: mpsc::UnboundedReceiver<T>,
     mut resolver: R,

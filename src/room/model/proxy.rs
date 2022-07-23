@@ -4,7 +4,7 @@ use super::{
     types::{RoomEdges, RoomSender, RoomSize},
 };
 use crate::{
-    messaging::traits::{Proxy, Raise},
+    messaging::traits::{Detach, Proxy, Raise},
     Id,
 };
 use anyhow::Result;
@@ -20,10 +20,6 @@ pub struct RoomProxy {
 }
 
 impl Raise<RoomEvent> for RoomProxy {
-    fn sender(&self) -> RoomSender {
-        self.sender.clone()
-    }
-
     fn raise(&self, event: RoomEvent) -> Result<()> {
         self.sender.send(event)?;
 

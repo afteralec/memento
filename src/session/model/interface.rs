@@ -1,14 +1,14 @@
 use super::{
     proxy::SessionProxy,
     resolver::SessionResolver,
-    stream_resolver::SessionStreamResolver,
-    types::{SessionReceiver, SessionSender, SessionStream},
+    types::{SessionReceiver, SessionSender},
+    SessionEvent,
 };
 use crate::{
     messaging::{
         error::DetachError,
-        functions::resolve_stream_and_receiver,
-        traits::{Detach, ProvideProxy, Spawn},
+        functions::{resolve_receiver, spawn_and_trace},
+        traits::{Detach, ProvideProxy},
     },
     Id,
 };
@@ -22,8 +22,6 @@ pub struct Session {
     sender: SessionSender,
     receiver: Option<SessionReceiver>,
     resolver: Option<SessionResolver>,
-    stream: Option<SessionStream>,
-    stream_resolver: Option<SessionStreamResolver>,
 }
 
 impl Default for Session {
@@ -35,8 +33,6 @@ impl Default for Session {
             sender,
             receiver: Some(receiver),
             resolver: Some(SessionResolver::default()),
-            stream: None,
-            stream_resolver: Some(SessionStreamResolver::default()),
         }
     }
 }
@@ -48,18 +44,15 @@ impl Clone for Session {
             sender: self.sender.clone(),
             receiver: None,
             resolver: None,
-            stream: None,
-            stream_resolver: None,
         }
     }
 }
 
-impl Spawn for Session {}
+impl Detach<SessionEvent> for Session {
+    fn sender(&self) -> SessionSender {
+        self.sender.clone()
+    }
 
-impl Detach for Session
-where
-    Self: Spawn,
-{
     fn detach(&mut self) -> Result<()> {
         let receiver = self
             .receiver
@@ -71,22 +64,7 @@ where
             .take()
             .ok_or_else(|| DetachError::NoResolver(format!("session id {}", self.id)))?;
 
-        let stream = self
-            .stream
-            .take()
-            .ok_or_else(|| DetachError::NoStream(format!("session id {}", self.id)))?;
-
-        let stream_resolver = self
-            .stream_resolver
-            .take()
-            .ok_or_else(|| DetachError::NoStream(format!("session id {}", self.id)))?;
-
-        self.spawn_and_trace(resolve_stream_and_receiver(
-            stream,
-            stream_resolver,
-            receiver,
-            resolver,
-        ));
+        spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
     }
@@ -95,19 +73,14 @@ where
 impl ProvideProxy<SessionProxy> for Session {}
 
 impl Session {
-    pub fn new(id: i64, stream: SessionStream) -> Self {
+    pub fn new(id: i64) -> Self {
         Session {
             id: Id(id),
-            stream: Some(stream),
             ..Default::default()
         }
     }
 
     pub fn id(&self) -> Id {
         self.id
-    }
-
-    pub fn sender(&self) -> SessionSender {
-        self.sender.clone()
     }
 }

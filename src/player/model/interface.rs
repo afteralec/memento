@@ -9,8 +9,8 @@ use crate::{
     keywords::util::Keywords,
     messaging::{
         error::DetachError,
-        functions::resolve_receiver,
-        traits::{Detach, ProvideProxy, Raise, Spawn},
+        functions::{resolve_receiver, spawn_and_trace},
+        traits::{Detach, ProvideProxy, Raise},
     },
     Id,
 };
@@ -27,20 +27,6 @@ pub struct Player {
     sender: PlayerSender,
     receiver: Option<PlayerReceiver>,
     resolver: Option<PlayerResolver>,
-}
-
-impl Clone for Player {
-    fn clone(&self) -> Self {
-        Player {
-            id: self.id.clone(),
-            names: self.names.clone(),
-            keywords: self.keywords.clone(),
-            current_actor_id: self.current_actor_id.clone(),
-            sender: self.sender.clone(),
-            receiver: None,
-            resolver: None,
-        }
-    }
 }
 
 impl Default for Player {
@@ -60,10 +46,6 @@ impl Default for Player {
 }
 
 impl Raise<PlayerEvent> for Player {
-    fn sender(&self) -> PlayerSender {
-        self.sender.clone()
-    }
-
     fn raise(&self, event: PlayerEvent) -> Result<()> {
         self.sender.send(event)?;
 
@@ -71,9 +53,11 @@ impl Raise<PlayerEvent> for Player {
     }
 }
 
-impl Spawn for Player {}
+impl Detach<PlayerEvent> for Player {
+    fn sender(&self) -> PlayerSender {
+        self.sender.clone()
+    }
 
-impl Detach for Player {
     fn detach(&mut self) -> Result<()> {
         let receiver = self
             .receiver
@@ -85,7 +69,7 @@ impl Detach for Player {
             .take()
             .ok_or_else(|| DetachError::NoResolver(format!("player id {}", self.id)))?;
 
-        self.spawn_and_trace(resolve_receiver(receiver, resolver));
+        spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
     }
@@ -94,9 +78,10 @@ impl Detach for Player {
 impl ProvideProxy<PlayerProxy> for Player {}
 
 impl Player {
-    pub fn new(id: i64) -> Self {
+    pub fn new(id: i64, current_actor_id: Option<Id>) -> Self {
         Player {
             id: Id::new(id),
+            current_actor_id,
             ..Default::default()
         }
     }
@@ -113,23 +98,25 @@ impl Player {
         self.keywords.clone()
     }
 
-    pub fn current_actor_id(&self) -> Option<Id> {
-        self.current_actor_id.clone()
-    }
-
-    pub fn assign_ownership(&mut self, id: &Id) -> Result<()> {
-        if let Some(owned_id) = &self.current_actor_id {
+    pub fn assign_actor(&mut self, player_id: &Id, id: &Id) -> Result<()> {
+        if let Some(assigned_id) = &self.current_actor_id {
             Err(Error::new(PlayerError::AlreadyAssigned(
-                self.id, *id, *owned_id,
+                *player_id,
+                *id,
+                *assigned_id,
             )))
         } else {
-            let _ = self.current_actor_id.insert(*id);
+            let _ = self.set_current_actor_id(*id);
             Ok(())
         }
     }
 
-    pub fn get_current_actor_id(&self) -> Option<Id> {
+    pub fn current_actor_id(&self) -> Option<Id> {
         self.current_actor_id
+    }
+
+    fn set_current_actor_id(&mut self, id: Id) {
+        let _ = self.current_actor_id.insert(id);
     }
 
     pub fn add_name(&mut self, id: &Id, name: &str) {

@@ -2,10 +2,7 @@ use crate::Id;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum SessionResourceError<'a> {
-    #[error("attempted to resolve SessionResourceEvent, but was missing sender for {0}")]
-    MissingResourceSender(&'a str),
-}
+pub enum SessionResourceError {}
 
 #[derive(Debug, Error)]
 pub enum AuthStepError {

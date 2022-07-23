@@ -1,4 +1,4 @@
-use super::{model::Server, resource_proxy::ResourceProxies};
+use super::model::Server;
 use crate::{
     actor::resource::ActorResource,
     core::AuthClient,
@@ -18,7 +18,6 @@ where
     player_resource: Option<PlayerResource>,
     room_resource: Option<RoomResource>,
     session_resource: Option<SessionResource>,
-    resource_proxies: Option<ResourceProxies>,
 }
 
 impl<T> Default for ServerBuilder<T>
@@ -34,7 +33,6 @@ where
             player_resource: None,
             room_resource: None,
             session_resource: Some(SessionResource::new()),
-            resource_proxies: None,
         }
     }
 }
@@ -50,11 +48,6 @@ where
 
     pub fn port(mut self, port: &str) -> Self {
         let _ = self.port.insert(port.to_owned());
-        self
-    }
-
-    pub fn resource_proxies(mut self, resource_proxies: ResourceProxies) -> Self {
-        let _ = self.resource_proxies.insert(resource_proxies);
         self
     }
 
@@ -92,7 +85,6 @@ where
             player_resource: self.player_resource.unwrap(),
             room_resource: self.room_resource.unwrap(),
             session_resource: self.session_resource.unwrap(),
-            resource_proxies: self.resource_proxies.unwrap(),
         }
     }
 }

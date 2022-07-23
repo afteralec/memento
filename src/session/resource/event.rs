@@ -1,7 +1,5 @@
-use super::{
-    super::model::{proxy::SessionProxy, types::SessionStream},
-    types::SessionResourceReplySender,
-};
+use super::{super::model::proxy::SessionProxy, types::SessionResourceReplySender};
+use crate::server::resource_proxy::ResourceProxies;
 use std::net::SocketAddr;
 use thiserror::Error;
 use tokio::net::TcpStream;
@@ -12,8 +10,9 @@ pub enum SessionResourceEvent {
     CreateSession {
         lines: Framed<TcpStream, LinesCodec>,
         addr: SocketAddr,
+        resource_proxies: ResourceProxies,
     },
-    NewSession(SessionStream, SessionResourceReplySender),
+    NewSession(SessionResourceReplySender),
 }
 
 #[derive(Debug, Error)]

@@ -1,5 +1,6 @@
 pub(crate) mod actor {
     pub(crate) mod model {
+        pub(crate) mod data;
         pub(crate) mod error;
         pub(crate) mod interface;
         pub(crate) mod proxy;
@@ -52,7 +53,9 @@ pub(crate) mod keywords {
 pub mod messaging {
     pub mod error;
     pub mod functions;
+    pub mod messenger;
     pub mod traits;
+    pub mod types;
 }
 
 pub(crate) mod player {
@@ -84,6 +87,7 @@ pub(crate) mod player {
 
 pub(crate) mod room {
     pub(crate) mod model {
+        pub(crate) mod data;
         pub(crate) mod event;
         pub(crate) mod interface;
         pub(crate) mod proxy;
@@ -116,11 +120,10 @@ pub(crate) mod room {
 
 pub mod server {
     pub(crate) mod builder;
+    pub(crate) mod init;
+    pub(crate) mod input;
     pub(crate) mod model;
     pub(crate) mod resource_proxy;
-
-    pub mod init;
-    pub mod input;
 }
 
 pub(crate) mod session {
@@ -129,7 +132,6 @@ pub(crate) mod session {
         pub(crate) mod interface;
         pub(crate) mod proxy;
         pub(crate) mod resolver;
-        pub(crate) mod stream_resolver;
         pub(crate) mod types;
 
         pub use event::SessionEvent;
@@ -158,9 +160,16 @@ pub(crate) mod session {
     }
 }
 
+pub(crate) mod stream {
+    pub(crate) mod resolve;
+    pub(crate) mod resolver;
+    pub(crate) mod types;
+}
+
 pub(crate) mod tools {
     pub(crate) mod actor_toml;
     pub(crate) mod room_toml;
+    pub(crate) mod toml;
 }
 
 // Define the public interface for the package
@@ -170,7 +179,10 @@ pub mod core {
         traits::AuthClient,
     };
 
-    pub use crate::server::model::Server;
+    pub mod server {
+        pub use crate::server::init::init;
+        pub use crate::server::input::ServerInput;
+    }
 }
 pub mod model {
     pub use crate::actor::model::Actor;

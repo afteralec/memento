@@ -1,16 +1,17 @@
 use super::{
     super::model::Actor,
     error::ActorResourceError,
+    event::ActorResourceEvent,
     proxy::ActorResourceProxy,
     resolver::ActorResourceResolver,
     types::{ActorResourceReceiver, ActorResourceSender},
 };
 use crate::messaging::{
-    functions::resolve_receiver,
-    traits::{Detach, ProvideProxy, Spawn},
+    functions::{resolve_receiver, spawn_and_trace},
+    traits::{Detach, ProvideProxy},
 };
 use anyhow::Result;
-use std::default::Default;
+use std::{default::Default, fmt::Debug};
 use tokio::sync::mpsc;
 
 #[derive(Debug)]
@@ -32,12 +33,11 @@ impl Default for ActorResource {
     }
 }
 
-impl Spawn for ActorResource {}
+impl Detach<ActorResourceEvent> for ActorResource {
+    fn sender(&self) -> ActorResourceSender {
+        self.sender.clone()
+    }
 
-impl Detach for ActorResource
-where
-    Self: Spawn,
-{
     fn detach(&mut self) -> Result<()> {
         let receiver = self
             .receiver
@@ -49,7 +49,7 @@ where
             .take()
             .ok_or_else(|| ActorResourceError::NoResolver)?;
 
-        self.spawn_and_trace(resolve_receiver(receiver, resolver));
+        spawn_and_trace(resolve_receiver(receiver, resolver));
 
         Ok(())
     }
@@ -63,9 +63,5 @@ impl ActorResource {
             resolver: Some(ActorResourceResolver::new(actor_iter)),
             ..Default::default()
         }
-    }
-
-    pub fn sender(&self) -> ActorResourceSender {
-        self.sender.clone()
     }
 }

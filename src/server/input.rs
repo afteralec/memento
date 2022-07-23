@@ -56,7 +56,7 @@ where
 {
     fn default() -> Self {
         ServerInputBuilder {
-            ip: Some("127.0.0.1".to_owned(),),
+            ip: Some("127.0.0.1".to_owned()),
             port: Some("8080".to_owned()),
             auth_client: None,
             actors: None,

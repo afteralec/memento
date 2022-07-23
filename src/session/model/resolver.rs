@@ -26,6 +26,11 @@ impl Resolver<SessionEvent> for SessionResolver {
 
                 Ok(())
             }
+            SessionEvent::Input(input) => {
+                tracing::debug!("got input: {:?}", input);
+
+                Ok(())
+            }
         }
     }
 
