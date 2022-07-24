@@ -1,26 +1,18 @@
 use super::{
-    super::model::Player,
+    super::{data::PlayerData, resolver::PlayerResolver, types::PlayerMessenger},
     event::{PlayerResourceEvent, PlayerResourceReplyEvent},
 };
 use crate::{
-    messaging::traits::{Detach, ProvideProxy, Resolver},
+    messaging::traits::{Detach, Provide, Resolver},
     Id,
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use std::{collections::HashMap, default::Default};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct PlayerResourceResolver {
     state: PlayerResourceState,
-}
-
-impl Default for PlayerResourceResolver {
-    fn default() -> Self {
-        PlayerResourceResolver {
-            state: PlayerResourceState::default(),
-        }
-    }
 }
 
 #[async_trait]
@@ -28,9 +20,11 @@ impl Resolver<PlayerResourceEvent> for PlayerResourceResolver {
     fn resolve_on(&mut self, event: PlayerResourceEvent) -> Result<()> {
         match event {
             PlayerResourceEvent::GetPlayerById(id, reply_sender) => {
-                if let Some(player) = self.state.players.get(&id) {
-                    reply_sender
-                        .send(PlayerResourceReplyEvent::GotPlayerById(id, player.proxy()))?;
+                if let Some(player) = self.state.messengers.get(&id) {
+                    reply_sender.send(PlayerResourceReplyEvent::GotPlayerById(
+                        id,
+                        player.provide(),
+                    ))?;
                 } else {
                     reply_sender.send(PlayerResourceReplyEvent::NoPlayerAtId(id))?;
                 }
@@ -38,7 +32,7 @@ impl Resolver<PlayerResourceEvent> for PlayerResourceResolver {
                 Ok(())
             }
             PlayerResourceEvent::DetachPlayerById(id, reply_sender) => {
-                if let Some(player) = self.state.players.get_mut(&id) {
+                if let Some(player) = self.state.messengers.get_mut(&id) {
                     match player.detach() {
                         Ok(_) => {
                             reply_sender.send(PlayerResourceReplyEvent::PlayerDetached(id))?;
@@ -63,7 +57,7 @@ impl Resolver<PlayerResourceEvent> for PlayerResourceResolver {
 }
 
 impl PlayerResourceResolver {
-    pub fn new(player_iter: impl Iterator<Item = Player>) -> Self {
+    pub fn new(player_iter: impl Iterator<Item = PlayerData>) -> Self {
         PlayerResourceResolver {
             state: PlayerResourceState::new(player_iter),
         }
@@ -72,25 +66,29 @@ impl PlayerResourceResolver {
 
 #[derive(Debug)]
 pub struct PlayerResourceState {
-    players: HashMap<Id, Player>,
-}
-
-impl Default for PlayerResourceState {
-    fn default() -> Self {
-        PlayerResourceState {
-            players: HashMap::default(),
-        }
-    }
+    players: HashMap<Id, PlayerData>,
+    messengers: HashMap<Id, PlayerMessenger>,
 }
 
 impl PlayerResourceState {
-    pub fn new(player_iter: impl Iterator<Item = Player>) -> Self {
-        let players = player_iter.fold(HashMap::new(), |mut players, player| {
-            players.insert(player.id(), player);
+    pub fn new(player_iter: impl Iterator<Item = PlayerData>) -> Self {
+        let (players, messengers) = player_iter.fold(
+            (HashMap::new(), HashMap::new()),
+            |(mut players, mut messengers), player| {
+                let messenger_name = format!("player {}", player.id);
+                players.insert(Id(player.id), player);
+                messengers.insert(
+                    Id(player.id),
+                    PlayerMessenger::new(&messenger_name, PlayerResolver::new(&player)),
+                );
 
-            players
-        });
+                (players, messengers)
+            },
+        );
 
-        PlayerResourceState { players }
+        PlayerResourceState {
+            players,
+            messengers,
+        }
     }
 }

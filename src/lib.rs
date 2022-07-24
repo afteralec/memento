@@ -1,35 +1,29 @@
 pub(crate) mod actor {
-    pub(crate) mod model {
-        pub(crate) mod data;
-        pub(crate) mod error;
-        pub(crate) mod interface;
-        pub(crate) mod proxy;
-
-        pub use interface::Actor;
-    }
-
     pub(crate) mod resource {
-        pub(crate) mod error;
         pub(crate) mod event;
         pub(crate) mod interface;
-        pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
 
         pub use event::{ActorResourceEvent, ActorResourceReplyEvent};
         pub use interface::ActorResource;
         pub use types::{
-            ActorResourceReceiver, ActorResourceReplyReceiver, ActorResourceReplySender,
-            ActorResourceSender,
+            ActorResourceReplyReceiver, ActorResourceReplySender, ActorResourceSender,
         };
     }
+
+    pub(crate) mod data;
+    pub(crate) mod error;
+    pub(crate) mod event;
+    pub(crate) mod interface;
+    pub(crate) mod resolver;
+    pub(crate) mod types;
 }
 
 pub(crate) mod auth {
     pub mod resource {
         pub(crate) mod event;
         pub(crate) mod interface;
-        pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
 
@@ -37,10 +31,7 @@ pub(crate) mod auth {
             AuthRequest, AuthResourceEvent, AuthResourceReplyEvent, AuthResponse, Credential,
         };
         pub use interface::AuthResource;
-        pub use types::{
-            AuthResourceReceiver, AuthResourceReplyReceiver, AuthResourceReplySender,
-            AuthResourceSender,
-        };
+        pub use types::{AuthResourceReplyReceiver, AuthResourceReplySender, AuthResourceSender};
     }
 
     pub(crate) mod traits;
@@ -59,105 +50,75 @@ pub mod messaging {
 }
 
 pub(crate) mod player {
-    pub(crate) mod model {
-        pub(crate) mod error;
-        pub(crate) mod event;
-        pub(crate) mod interface;
-        pub(crate) mod proxy;
-        pub(crate) mod resolver;
-        pub(crate) mod types;
-
-        pub use event::PlayerEvent;
-        pub use interface::Player;
-    }
-
     pub(crate) mod resource {
         pub(crate) mod event;
         pub(crate) mod interface;
-        pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
-
-        pub(crate) use event::PlayerResourceReplyEvent;
-        pub(crate) use types::PlayerResourceReplyReceiver;
-
-        pub use interface::PlayerResource;
     }
+
+    pub(crate) mod data;
+    pub(crate) mod error;
+    pub(crate) mod event;
+    pub(crate) mod interface;
+    pub(crate) mod resolver;
+    pub(crate) mod types;
 }
 
 pub(crate) mod room {
-    pub(crate) mod model {
-        pub(crate) mod data;
-        pub(crate) mod event;
-        pub(crate) mod interface;
-        pub(crate) mod proxy;
-        pub(crate) mod resolver;
-        pub(crate) mod types;
+    pub(crate) mod functions {
+        pub(crate) mod hydrate_edges;
 
-        pub use event::RoomEvent;
-        pub use interface::Room;
-        pub use proxy::RoomProxy;
-        pub use resolver::RoomResolver;
-        pub use types::{RoomEdges, RoomReceiver, RoomSender, RoomSize};
+        pub(crate) use hydrate_edges::hydrate_edges;
     }
-
     pub(crate) mod resource {
         pub(crate) mod event;
         pub(crate) mod interface;
-        pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
-
-        pub use event::{RoomResourceEvent, RoomResourceReplyEvent};
-        pub use interface::RoomResource;
-        pub use resolver::RoomResourceResolver;
-        pub use types::{
-            RoomResourceReceiver, RoomResourceReplyReceiver, RoomResourceReplySender,
-            RoomResourceSender,
-        };
     }
+
+    pub(crate) mod data;
+    pub(crate) mod event;
+    pub(crate) mod interface;
+    pub(crate) mod resolver;
+    pub(crate) mod types;
 }
 
 pub mod server {
+    pub(crate) mod resources {
+        pub(crate) mod builder;
+        pub(crate) mod interface;
+    }
+
     pub(crate) mod builder;
     pub(crate) mod init;
     pub(crate) mod input;
-    pub(crate) mod model;
-    pub(crate) mod resource_proxy;
+    pub(crate) mod interface;
 }
 
 pub(crate) mod session {
-    pub(crate) mod model {
-        pub(crate) mod event;
-        pub(crate) mod interface;
-        pub(crate) mod proxy;
-        pub(crate) mod resolver;
-        pub(crate) mod types;
-
-        pub use event::SessionEvent;
-        pub use interface::Session;
-        pub use resolver::SessionResolver;
-        pub use types::{SessionReceiver, SessionSender};
+    pub(crate) mod functions {
+        pub(crate) mod create;
+        pub(crate) mod steps;
     }
-
     pub(crate) mod resource {
-        pub(crate) mod error;
         pub(crate) mod event;
-        pub(crate) mod functions {
-            pub(crate) mod create;
-            pub(crate) mod steps;
-        }
         pub(crate) mod interface;
-        pub(crate) mod proxy;
         pub(crate) mod resolver;
         pub(crate) mod types;
 
-        pub use error::SessionResourceError;
         pub use event::SessionResourceEvent;
         pub use interface::SessionResource;
         pub use resolver::SessionResourceResolver;
-        pub use types::{SessionResourceReceiver, SessionResourceSender};
+        pub use types::SessionResourceSender;
     }
+
+    pub(crate) mod error;
+    pub(crate) mod event;
+    pub(crate) mod interface;
+    pub(crate) mod resolver;
+    pub(crate) mod types;
 }
 
 pub(crate) mod stream {
@@ -184,18 +145,25 @@ pub mod core {
         pub use crate::server::input::ServerInput;
     }
 }
+
+pub mod data {
+    pub use crate::actor::data::ActorData;
+    pub use crate::player::data::PlayerData;
+    pub use crate::room::data::RoomData;
+}
+
 pub mod model {
-    pub use crate::actor::model::Actor;
-    pub use crate::player::model::Player;
-    pub use crate::room::model::Room;
-    pub use crate::session::model::Session;
+    pub use crate::actor::interface::Actor;
+    pub use crate::player::interface::Player;
+    pub use crate::room::interface::Room;
+    pub use crate::session::interface::Session;
 }
 
 pub mod resource {
     pub use crate::actor::resource::ActorResource;
     pub use crate::auth::resource::AuthResource;
-    pub use crate::player::resource::PlayerResource;
-    pub use crate::room::resource::RoomResource;
+    pub use crate::player::resource::interface::PlayerResource;
+    pub use crate::room::resource::interface::RoomResource;
     pub use crate::session::resource::SessionResource;
 }
 
@@ -212,6 +180,10 @@ pub struct Id(i64);
 impl Id {
     pub fn new(id: i64) -> Self {
         Id(id)
+    }
+
+    pub fn set(&mut self, id: i64) {
+        self.0 = id;
     }
 
     pub fn is_valid(&self) -> bool {

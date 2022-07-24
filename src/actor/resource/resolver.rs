@@ -1,26 +1,18 @@
 use super::{
-    super::model::Actor,
+    super::{data::ActorData, resolver::ActorResolver, types::ActorMessenger},
     event::{ActorResourceEvent, ActorResourceReplyEvent},
 };
 use crate::{
-    messaging::traits::{ProvideProxy, Resolver},
+    messaging::traits::{Provide, Resolver},
     Id,
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use std::{collections::HashMap, default::Default};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct ActorResourceResolver {
     state: ActorResourceState,
-}
-
-impl Default for ActorResourceResolver {
-    fn default() -> Self {
-        ActorResourceResolver {
-            state: ActorResourceState::default(),
-        }
-    }
 }
 
 #[async_trait]
@@ -28,8 +20,9 @@ impl Resolver<ActorResourceEvent> for ActorResourceResolver {
     fn resolve_on(&mut self, event: ActorResourceEvent) -> Result<()> {
         match event {
             ActorResourceEvent::GetActorById(id, reply_sender) => {
-                if let Some(actor) = self.state.actors.get(&id) {
-                    reply_sender.send(ActorResourceReplyEvent::GotActorById(id, actor.proxy()))?;
+                if let Some(actor) = self.state.messengers.get(&id) {
+                    reply_sender
+                        .send(ActorResourceReplyEvent::GotActorById(id, actor.provide()))?;
                 } else {
                     reply_sender.send(ActorResourceReplyEvent::NoActorAtId(id))?;
                 }
@@ -47,35 +40,35 @@ impl Resolver<ActorResourceEvent> for ActorResourceResolver {
 }
 
 impl ActorResourceResolver {
-    pub fn new(actor_iter: impl Iterator<Item = Actor>) -> Self {
+    pub fn new(actor_iter: impl Iterator<Item = ActorData>) -> Self {
         ActorResourceResolver {
             state: ActorResourceState::new(actor_iter),
-            ..Default::default()
         }
     }
 }
 
 #[derive(Debug)]
 pub struct ActorResourceState {
-    actors: HashMap<Id, Actor>,
-}
-
-impl Default for ActorResourceState {
-    fn default() -> Self {
-        ActorResourceState {
-            actors: HashMap::default(),
-        }
-    }
+    actors: HashMap<Id, ActorData>,
+    messengers: HashMap<Id, ActorMessenger>,
 }
 
 impl ActorResourceState {
-    pub fn new(actor_iter: impl Iterator<Item = Actor>) -> Self {
-        let actors = actor_iter.fold(HashMap::new(), |mut actors, actor| {
-            actors.insert(actor.id(), actor);
+    pub fn new(actor_iter: impl Iterator<Item = ActorData>) -> Self {
+        let (actors, messengers) = actor_iter.fold(
+            (HashMap::new(), HashMap::new()),
+            |(mut actors, mut messengers), actor| {
+                let name = format!("actor {}", actor.id);
+                messengers.insert(
+                    Id(actor.id),
+                    ActorMessenger::new(&name, ActorResolver::new(&actor)),
+                );
+                actors.insert(Id(actor.id), actor);
 
-            actors
-        });
+                (actors, messengers)
+            },
+        );
 
-        ActorResourceState { actors }
+        ActorResourceState { actors, messengers }
     }
 }

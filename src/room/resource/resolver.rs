@@ -1,24 +1,20 @@
-use super::event::{RoomResourceEvent, RoomResourceReplyEvent};
+use super::{
+    super::{
+        data::RoomData, functions::hydrate_edges, resolver::RoomResolver, types::RoomMessenger,
+    },
+    event::{RoomResourceEvent, RoomResourceReplyEvent},
+};
 use crate::{
-    messaging::traits::{Detach, ProvideProxy, Resolver},
-    room::model::Room,
+    messaging::traits::{Detach, DetachAll, Provide, Resolver},
     Id,
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use std::{collections::HashMap, default::Default, iter::Iterator};
+use std::{collections::HashMap, iter::Iterator};
 
 #[derive(Debug)]
 pub struct RoomResourceResolver {
     state: RoomResourceState,
-}
-
-impl Default for RoomResourceResolver {
-    fn default() -> Self {
-        RoomResourceResolver {
-            state: RoomResourceState::default(),
-        }
-    }
 }
 
 #[async_trait]
@@ -26,8 +22,9 @@ impl Resolver<RoomResourceEvent> for RoomResourceResolver {
     fn resolve_on(&mut self, event: RoomResourceEvent) -> Result<()> {
         match event {
             RoomResourceEvent::GetRoomById(id, reply_sender) => {
-                if let Some(room) = self.state.rooms.get(&id) {
-                    reply_sender.send(RoomResourceReplyEvent::GotRoomById(id, room.proxy()))?;
+                if let Some(messenger) = self.state.messengers.get(&id) {
+                    reply_sender
+                        .send(RoomResourceReplyEvent::GotRoomById(id, messenger.provide()))?;
                 } else {
                     reply_sender.send(RoomResourceReplyEvent::NoRoomAtId(id))?;
                 }
@@ -39,78 +36,77 @@ impl Resolver<RoomResourceEvent> for RoomResourceResolver {
 
     async fn resolve_async(&mut self, _: RoomResourceEvent) -> Result<()> {
         unimplemented!(
-            "Async resolution not supported for RoomResourceResolver, use resolve_on instead."
+            "async resolution not supported for RoomResourceResolver, use resolve_on instead."
         );
     }
 }
 
-impl RoomResourceResolver {
-    pub fn new(room_iter: impl Iterator<Item = Room>) -> Self {
-        RoomResourceResolver {
-            state: RoomResourceState::new(room_iter),
-        }
-    }
-
-    pub fn detach_all(&mut self) -> Result<()> {
+impl DetachAll for RoomResourceResolver {
+    fn detach_all(&mut self) -> Result<()> {
         self.state.detach_all()?;
 
         Ok(())
     }
 }
 
-#[derive(Debug)]
-pub struct RoomResourceState {
-    rooms: HashMap<Id, Room>,
+impl RoomResourceResolver {
+    pub fn new(room_iter: impl Iterator<Item = RoomData>) -> Self {
+        RoomResourceResolver {
+            state: RoomResourceState::new(room_iter),
+        }
+    }
 }
 
-impl Default for RoomResourceState {
-    fn default() -> Self {
-        RoomResourceState {
-            rooms: HashMap::default(),
+#[derive(Debug)]
+pub struct RoomResourceState {
+    rooms: HashMap<Id, RoomData>,
+    messengers: HashMap<Id, RoomMessenger>,
+}
+
+impl DetachAll for RoomResourceState {
+    fn detach_all(&mut self) -> Result<()> {
+        for messenger in self.messengers.values_mut() {
+            messenger.detach()?;
         }
+
+        Ok(())
     }
 }
 
 impl RoomResourceState {
-    pub fn new(room_iter: impl Iterator<Item = Room>) -> Self {
-        let rooms = room_iter.fold(HashMap::new(), |mut rooms, room| {
-            rooms.insert(room.id(), room);
-            rooms
-        });
+    pub fn new(room_iter: impl Iterator<Item = RoomData>) -> Self {
+        let (rooms, messengers) = room_iter.fold(
+            (HashMap::new(), HashMap::new()),
+            |(mut rooms, mut messengers), room| {
+                let name = format!("room {}", &room.id);
+                messengers.insert(
+                    Id(room.id.clone()),
+                    RoomMessenger::new(&name, RoomResolver::new(&room)),
+                );
+                rooms.insert(Id(room.id.clone()), room);
+                (rooms, messengers)
+            },
+        );
 
-        let mut room_resource_state = RoomResourceState {
-            rooms,
-            ..Default::default()
-        };
+        let mut room_resource_state = RoomResourceState { rooms, messengers };
 
-        room_resource_state.hydrate();
+        room_resource_state.hydrate_edges();
 
         room_resource_state
     }
 
-    fn hydrate(&mut self) {
-        self.hydrate_room_edges();
-    }
+    fn hydrate_edges(&mut self) {
+        let mut messengers: HashMap<Id, RoomMessenger> =
+            self.messengers
+                .iter()
+                .fold(HashMap::new(), |mut messengers, (id, messenger)| {
+                    messengers.insert(*id, messenger.clone());
 
-    fn hydrate_room_edges(&mut self) {
-        let rooms = &self
-            .rooms
-            .iter()
-            .fold(HashMap::new(), |mut room_senders, (room_id, room)| {
-                room_senders.insert(*room_id, room.proxy());
-                room_senders
-            });
+                    messengers
+                });
 
-        for room in self.rooms.values_mut() {
-            room.hydrate_edges(&rooms);
+        for room in messengers.values_mut() {
+            hydrate_edges(room, &self.messengers);
         }
-    }
-
-    pub fn detach_all(&mut self) -> Result<()> {
-        for room in self.rooms.values_mut() {
-            room.detach()?;
-        }
-
-        Ok(())
     }
 }

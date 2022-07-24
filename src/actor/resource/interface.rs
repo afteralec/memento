@@ -1,67 +1,28 @@
 use super::{
-    super::model::Actor,
-    error::ActorResourceError,
     event::ActorResourceEvent,
-    proxy::ActorResourceProxy,
-    resolver::ActorResourceResolver,
-    types::{ActorResourceReceiver, ActorResourceSender},
+    types::{ActorResourceMessenger, ActorResourceSender},
 };
-use crate::messaging::{
-    functions::{resolve_receiver, spawn_and_trace},
-    traits::{Detach, ProvideProxy},
-};
+use crate::messaging::traits::{Interface, Raise};
 use anyhow::Result;
-use std::{default::Default, fmt::Debug};
-use tokio::sync::mpsc;
 
-#[derive(Debug)]
+#[readonly::make]
+#[derive(Debug, Clone)]
 pub struct ActorResource {
     sender: ActorResourceSender,
-    receiver: Option<ActorResourceReceiver>,
-    resolver: Option<ActorResourceResolver>,
 }
 
-impl Default for ActorResource {
-    fn default() -> Self {
-        let (sender, receiver) = mpsc::unbounded_channel();
-
-        ActorResource {
-            sender,
-            receiver: Some(receiver),
-            resolver: Some(ActorResourceResolver::default()),
-        }
-    }
-}
-
-impl Detach<ActorResourceEvent> for ActorResource {
-    fn sender(&self) -> ActorResourceSender {
-        self.sender.clone()
-    }
-
-    fn detach(&mut self) -> Result<()> {
-        let receiver = self
-            .receiver
-            .take()
-            .ok_or_else(|| ActorResourceError::NoReceiver)?;
-
-        let resolver = self
-            .resolver
-            .take()
-            .ok_or_else(|| ActorResourceError::NoResolver)?;
-
-        spawn_and_trace(resolve_receiver(receiver, resolver));
+impl Raise<ActorResourceEvent> for ActorResource {
+    fn raise(&self, event: ActorResourceEvent) -> Result<()> {
+        self.sender.send(event)?;
 
         Ok(())
     }
 }
 
-impl ProvideProxy<ActorResourceProxy> for ActorResource {}
-
-impl ActorResource {
-    pub fn new(actor_iter: impl Iterator<Item = Actor>) -> Self {
+impl Interface<ActorResourceMessenger> for ActorResource {
+    fn of(m: &ActorResourceMessenger) -> Self {
         ActorResource {
-            resolver: Some(ActorResourceResolver::new(actor_iter)),
-            ..Default::default()
+            sender: m.sender.clone(),
         }
     }
 }

@@ -1,4 +1,4 @@
-use super::{super::model::proxy::ActorProxy, types::ActorResourceReplySender};
+use super::{super::interface::Actor, types::ActorResourceReplySender};
 use crate::Id;
 use thiserror::Error;
 
@@ -11,7 +11,7 @@ pub enum ActorResourceEvent {
 #[derive(Debug, Error)]
 pub enum ActorResourceReplyEvent {
     #[error("ActorResourceReply::GotActorById raised with id {0} but channel is closed")]
-    GotActorById(Id, ActorProxy),
+    GotActorById(Id, Actor),
     #[error("ActorResourceReply::NoActorAtId raised with id {0} but channel is closed")]
     NoActorAtId(Id),
 }

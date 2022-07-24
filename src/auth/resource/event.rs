@@ -27,7 +27,6 @@ pub enum Credential {
 #[derive(Debug)]
 pub enum AuthResponse {
     Authenticated {
-        id: Id,
         player_id: Id,
         // @TODO: Add modeling for initial permissions here
     },

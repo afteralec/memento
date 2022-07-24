@@ -1,33 +1,28 @@
-use super::{input::ServerInput, model::Server};
+use super::{input::ServerInput, interface::Server, resources::interface::Resources};
 use crate::{
-    actor::{model::Actor, resource::ActorResource},
-    auth::{resource::AuthResource, traits::AuthClient},
-    player::{model::Player, resource::PlayerResource},
-    room::{model::Room, resource::RoomResource},
+    actor::data::ActorData, auth::traits::AuthClient, player::data::PlayerData,
+    room::data::RoomData,
 };
 use anyhow::Result;
 use std::{default::Default, fmt::Debug};
 
-pub fn init<C, A, P, R>(server_input: ServerInput<C, A, P, R>) -> Result<Server<C>>
+pub fn init<C, R, A, P>(server_input: ServerInput<C, R, A, P>) -> Result<Server>
 where
     C: 'static + Send + Sync + Debug + Default + AuthClient,
-    A: 'static + Send + Sync + Iterator<Item = Actor>,
-    P: 'static + Send + Sync + Iterator<Item = Player>,
-    R: 'static + Send + Sync + Iterator<Item = Room>,
+    R: 'static + Send + Sync + Iterator<Item = RoomData>,
+    A: 'static + Send + Sync + Iterator<Item = ActorData>,
+    P: 'static + Send + Sync + Iterator<Item = PlayerData>,
 {
-    let auth_resource = AuthResource::<C>::new(server_input.auth_client);
-    let actor_resource = ActorResource::new(server_input.actors);
-    let player_resource = PlayerResource::new(server_input.players);
-    let room_resource = RoomResource::new(server_input.rooms);
-
-    let mut server = Server::builder()
-        .actor_resource(actor_resource)
-        .auth_resource(auth_resource)
-        .player_resource(player_resource)
-        .room_resource(room_resource)
+    // @TODO: Separate the logic for detaching the resources from the build call
+    let resources = Resources::builder()
+        .auth_client(server_input.auth_client)
+        .rooms(server_input.rooms)
+        .actors(server_input.actors)
+        .players(server_input.players)
         .build();
 
-    server.detach_all()?;
+    let mut server = Server::builder().resources(resources).build();
+
     server.listen()?;
 
     Ok(server)

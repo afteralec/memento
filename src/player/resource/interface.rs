@@ -1,35 +1,14 @@
 use super::{
-    super::model::Player,
     event::PlayerResourceEvent,
-    proxy::PlayerResourceProxy,
-    resolver::PlayerResourceResolver,
-    types::{PlayerResourceReceiver, PlayerResourceSender},
+    types::{PlayerResourceMessenger, PlayerResourceSender},
 };
-use crate::messaging::{
-    error::DetachError,
-    functions::{resolve_receiver, spawn_and_trace},
-    traits::{Detach, ProvideProxy, Raise},
-};
+use crate::messaging::traits::{Interface, Raise};
 use anyhow::Result;
-use std::default::Default;
-use tokio::sync::mpsc;
+use std::fmt::Debug;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PlayerResource {
     sender: PlayerResourceSender,
-    receiver: Option<PlayerResourceReceiver>,
-    resolver: Option<PlayerResourceResolver>,
-}
-
-impl Default for PlayerResource {
-    fn default() -> Self {
-        let (sender, receiver) = mpsc::unbounded_channel();
-        PlayerResource {
-            sender,
-            receiver: Some(receiver),
-            resolver: Some(PlayerResourceResolver::default()),
-        }
-    }
 }
 
 impl Raise<PlayerResourceEvent> for PlayerResource {
@@ -40,35 +19,10 @@ impl Raise<PlayerResourceEvent> for PlayerResource {
     }
 }
 
-impl Detach<PlayerResourceEvent> for PlayerResource {
-    fn sender(&self) -> PlayerResourceSender {
-        self.sender.clone()
-    }
-
-    fn detach(&mut self) -> Result<()> {
-        let receiver = self
-            .receiver
-            .take()
-            .ok_or_else(|| DetachError::NoReceiver("player resource".to_owned()))?;
-
-        let resolver = self
-            .resolver
-            .take()
-            .ok_or_else(|| DetachError::NoResolver("player resource".to_owned()))?;
-
-        spawn_and_trace(resolve_receiver(receiver, resolver));
-
-        Ok(())
-    }
-}
-
-impl ProvideProxy<PlayerResourceProxy> for PlayerResource {}
-
-impl PlayerResource {
-    pub fn new(player_iter: impl Iterator<Item = Player>) -> Self {
+impl Interface<PlayerResourceMessenger> for PlayerResource {
+    fn of(m: &PlayerResourceMessenger) -> Self {
         PlayerResource {
-            resolver: Some(PlayerResourceResolver::new(player_iter)),
-            ..Default::default()
+            sender: m.sender.clone(),
         }
     }
 }

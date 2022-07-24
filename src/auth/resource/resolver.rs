@@ -8,16 +8,16 @@ use async_trait::async_trait;
 use std::{default::Default, fmt::Debug};
 
 #[derive(Debug)]
-pub struct AuthResourceResolver<T>
+pub struct AuthResourceResolver<C>
 where
-    T: 'static + Send + Sync + Debug + Default + AuthClient,
+    C: 'static + Send + Sync + Debug + Default + AuthClient,
 {
-    state: AuthResourceState<T>,
+    state: AuthResourceState<C>,
 }
 
-impl<T> Default for AuthResourceResolver<T>
+impl<C> Default for AuthResourceResolver<C>
 where
-    T: 'static + Send + Sync + Debug + Default + AuthClient,
+    C: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     fn default() -> Self {
         AuthResourceResolver {
@@ -27,9 +27,9 @@ where
 }
 
 #[async_trait]
-impl<T> Resolver<AuthResourceEvent> for AuthResourceResolver<T>
+impl<C> Resolver<AuthResourceEvent> for AuthResourceResolver<C>
 where
-    T: 'static + Send + Sync + Debug + Default + AuthClient,
+    C: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     fn resolve_on(&mut self, event: AuthResourceEvent) -> Result<()> {
         match event {
@@ -51,11 +51,11 @@ where
     }
 }
 
-impl<T> AuthResourceResolver<T>
+impl<C> AuthResourceResolver<C>
 where
-    T: 'static + Send + Sync + Debug + Default + AuthClient,
+    C: 'static + Send + Sync + Debug + Default + AuthClient,
 {
-    pub fn new(client: T) -> Self {
+    pub fn new(client: C) -> Self {
         AuthResourceResolver {
             state: AuthResourceState::new(client),
         }
@@ -63,29 +63,29 @@ where
 }
 
 #[derive(Debug)]
-pub struct AuthResourceState<T>
+pub struct AuthResourceState<C>
 where
-    T: 'static + Send + Sync + Debug + Default + AuthClient,
+    C: 'static + Send + Sync + Debug + Default + AuthClient,
 {
-    client: T,
+    client: C,
 }
 
-impl<T> Default for AuthResourceState<T>
+impl<C> Default for AuthResourceState<C>
 where
-    T: 'static + Send + Sync + Debug + Default + AuthClient,
+    C: 'static + Send + Sync + Debug + Default + AuthClient,
 {
     fn default() -> Self {
         AuthResourceState {
-            client: T::default(),
+            client: C::default(),
         }
     }
 }
 
-impl<T> AuthResourceState<T>
+impl<C> AuthResourceState<C>
 where
-    T: 'static + Send + Sync + Debug + Default + AuthClient,
+    C: 'static + Send + Sync + Debug + Default + AuthClient,
 {
-    pub fn new(client: T) -> Self {
+    pub fn new(client: C) -> Self {
         AuthResourceState { client }
     }
 }

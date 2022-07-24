@@ -1,5 +1,5 @@
 use super::toml;
-use crate::actor::model::data::ActorData;
+use crate::actor::data::ActorData;
 
 pub fn read(root_dir: &str, ids: &[i64]) -> Vec<Result<ActorData, serde_json::Error>> {
     toml::read(root_dir, ids)

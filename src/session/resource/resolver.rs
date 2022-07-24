@@ -1,31 +1,24 @@
 use super::{
-    super::model::Session,
+    super::{
+        functions::create::create_session, resolver::SessionResolver, types::SessionMessenger,
+    },
     event::{SessionResourceEvent, SessionResourceReplyEvent},
-    functions::create::create_session,
 };
 use crate::{
     messaging::{
         functions::spawn_and_trace,
-        traits::{Detach, ProvideProxy, Resolver},
+        traits::{Detach, Provide, Resolver},
     },
     Id,
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use std::{collections::HashMap, default::Default};
+use std::collections::HashMap;
 use unique_id::{sequence::SequenceGenerator, Generator};
 
 #[derive(Debug)]
 pub struct SessionResourceResolver {
     state: SessionResourceState,
-}
-
-impl Default for SessionResourceResolver {
-    fn default() -> Self {
-        SessionResourceResolver {
-            state: SessionResourceState::default(),
-        }
-    }
 }
 
 #[async_trait]
@@ -35,22 +28,24 @@ impl Resolver<SessionResourceEvent> for SessionResourceResolver {
             SessionResourceEvent::CreateSession {
                 lines,
                 addr,
-                resource_proxies,
+                resources,
             } => {
-                spawn_and_trace(create_session((lines, addr), resource_proxies));
+                spawn_and_trace(create_session((lines, addr), resources));
 
                 Ok(())
             }
             SessionResourceEvent::NewSession(reply_sender) => {
                 let id = self.state.id_gen.next_id();
-                let mut session = Session::new(id);
-                session.detach()?;
 
-                let session_proxy = session.proxy();
+                let name = format!("session {}", id);
+                let mut messenger = SessionMessenger::new(&name, SessionResolver::new());
 
-                self.state.sessions.insert(session.id(), session);
+                messenger.detach()?;
 
-                reply_sender.send(SessionResourceReplyEvent::NewSession(session_proxy))?;
+                let session = messenger.provide();
+                self.state.messengers.insert(Id(id), messenger);
+
+                reply_sender.send(SessionResourceReplyEvent::NewSession(session))?;
 
                 Ok(())
             }
@@ -64,16 +59,25 @@ impl Resolver<SessionResourceEvent> for SessionResourceResolver {
     }
 }
 
-#[derive(Debug)]
-pub struct SessionResourceState {
-    sessions: HashMap<Id, Session>,
-    id_gen: SequenceGenerator,
+impl SessionResourceResolver {
+    pub fn new() -> Self {
+        SessionResourceResolver {
+            state: SessionResourceState::new(),
+        }
+    }
 }
 
-impl Default for SessionResourceState {
-    fn default() -> Self {
+#[readonly::make]
+#[derive(Debug)]
+pub struct SessionResourceState {
+    pub(crate) messengers: HashMap<Id, SessionMessenger>,
+    pub(crate) id_gen: SequenceGenerator,
+}
+
+impl SessionResourceState {
+    pub fn new() -> Self {
         SessionResourceState {
-            sessions: HashMap::default(),
+            messengers: HashMap::new(),
             id_gen: SequenceGenerator::default(),
         }
     }

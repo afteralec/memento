@@ -1,5 +1,5 @@
-use super::{super::model::proxy::SessionProxy, types::SessionResourceReplySender};
-use crate::server::resource_proxy::ResourceProxies;
+use super::{super::interface::Session, types::SessionResourceReplySender};
+use crate::server::resources::interface::Resources;
 use std::net::SocketAddr;
 use thiserror::Error;
 use tokio::net::TcpStream;
@@ -10,7 +10,7 @@ pub enum SessionResourceEvent {
     CreateSession {
         lines: Framed<TcpStream, LinesCodec>,
         addr: SocketAddr,
-        resource_proxies: ResourceProxies,
+        resources: Resources,
     },
     NewSession(SessionResourceReplySender),
 }
@@ -20,5 +20,5 @@ pub enum SessionResourceReplyEvent {
     #[error(
         "SessionResourceReplyEvent::NewSession raised with session {0:?} but channel is closed"
     )]
-    NewSession(SessionProxy),
+    NewSession(Session),
 }

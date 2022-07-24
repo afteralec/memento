@@ -1,6 +1,6 @@
 use crate::{
     messaging::traits::{Raise, Resolver},
-    session::model::{event::SessionEvent, proxy::SessionProxy},
+    session::{event::SessionEvent, interface::Session},
 };
 use anyhow::Result;
 use async_trait::async_trait;
@@ -34,7 +34,7 @@ impl Resolver<String> for StreamResolver {
 }
 
 impl StreamResolver {
-    pub fn new(session: &SessionProxy) -> Self {
+    pub fn new(session: &Session) -> Self {
         StreamResolver {
             state: StreamState::new(session),
         }
@@ -44,7 +44,7 @@ impl StreamResolver {
 // @TODO: This is where the layer that parses player input should go
 #[derive(Debug)]
 pub struct StreamState {
-    session: Option<SessionProxy>,
+    session: Option<Session>,
 }
 
 impl Default for StreamState {
@@ -54,7 +54,7 @@ impl Default for StreamState {
 }
 
 impl StreamState {
-    pub fn new(session: &SessionProxy) -> Self {
+    pub fn new(session: &Session) -> Self {
         StreamState {
             session: Some(session.clone()),
         }

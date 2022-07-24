@@ -9,6 +9,7 @@ edition = "2021"
 anyhow = "1.0.58"
 thiserror = "1.0.31"
 async-trait = "0.1.56"
+readonly = "0.2.1"
 tracing = "0.1"
 unique_id = "0.1.4"
 

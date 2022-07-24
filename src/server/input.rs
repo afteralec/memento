@@ -1,15 +1,16 @@
 use crate::{
-    actor::model::Actor, auth::traits::AuthClient, player::model::Player, room::model::Room,
+    actor::data::ActorData, auth::traits::AuthClient, player::data::PlayerData,
+    room::data::RoomData,
 };
 use std::{default::Default, fmt::Debug};
 
 #[derive(Debug)]
-pub struct ServerInput<C, A, P, R>
+pub struct ServerInput<C, R, A, P>
 where
     C: 'static + Send + Sync + Debug + Default + AuthClient,
-    A: Iterator<Item = Actor>,
-    P: Iterator<Item = Player>,
-    R: Iterator<Item = Room>,
+    R: Iterator<Item = RoomData>,
+    A: Iterator<Item = ActorData>,
+    P: Iterator<Item = PlayerData>,
 {
     pub ip: String,
     pub port: String,
@@ -19,25 +20,25 @@ where
     pub rooms: R,
 }
 
-impl<C, A, P, R> ServerInput<C, A, P, R>
+impl<C, R, A, P> ServerInput<C, R, A, P>
 where
     C: 'static + Send + Sync + Debug + Default + AuthClient,
-    A: Iterator<Item = Actor>,
-    P: Iterator<Item = Player>,
-    R: Iterator<Item = Room>,
+    A: Iterator<Item = ActorData>,
+    P: Iterator<Item = PlayerData>,
+    R: Iterator<Item = RoomData>,
 {
-    pub fn builder() -> ServerInputBuilder<C, A, P, R> {
+    pub fn builder() -> ServerInputBuilder<C, R, A, P> {
         ServerInputBuilder::default()
     }
 }
 
 #[derive(Debug)]
-pub struct ServerInputBuilder<C, A, P, R>
+pub struct ServerInputBuilder<C, R, A, P>
 where
     C: 'static + Send + Sync + Debug + Default + AuthClient,
-    A: Iterator<Item = Actor>,
-    P: Iterator<Item = Player>,
-    R: Iterator<Item = Room>,
+    A: Iterator<Item = ActorData>,
+    P: Iterator<Item = PlayerData>,
+    R: Iterator<Item = RoomData>,
 {
     ip: Option<String>,
     port: Option<String>,
@@ -47,12 +48,12 @@ where
     rooms: Option<R>,
 }
 
-impl<C, A, P, R> Default for ServerInputBuilder<C, A, P, R>
+impl<C, R, A, P> Default for ServerInputBuilder<C, R, A, P>
 where
     C: 'static + Send + Sync + Debug + Default + AuthClient,
-    A: Iterator<Item = Actor>,
-    P: Iterator<Item = Player>,
-    R: Iterator<Item = Room>,
+    A: Iterator<Item = ActorData>,
+    P: Iterator<Item = PlayerData>,
+    R: Iterator<Item = RoomData>,
 {
     fn default() -> Self {
         ServerInputBuilder {
@@ -66,12 +67,12 @@ where
     }
 }
 
-impl<C, A, P, R> ServerInputBuilder<C, A, P, R>
+impl<C, R, A, P> ServerInputBuilder<C, R, A, P>
 where
     C: 'static + Send + Sync + Debug + Default + AuthClient,
-    A: Iterator<Item = Actor>,
-    P: Iterator<Item = Player>,
-    R: Iterator<Item = Room>,
+    A: Iterator<Item = ActorData>,
+    P: Iterator<Item = PlayerData>,
+    R: Iterator<Item = RoomData>,
 {
     pub fn ip(mut self, ip: &str) -> Self {
         let _ = self.ip.insert(ip.to_owned());
@@ -103,7 +104,7 @@ where
         self
     }
 
-    pub fn build(self) -> ServerInput<C, A, P, R> {
+    pub fn build(self) -> ServerInput<C, R, A, P> {
         ServerInput {
             ip: self.ip.unwrap(),
             port: self.port.unwrap(),

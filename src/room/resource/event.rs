@@ -1,4 +1,4 @@
-use super::{super::model::RoomProxy, types::RoomResourceReplySender};
+use super::{super::interface::Room, types::RoomResourceReplySender};
 use crate::Id;
 use thiserror::Error;
 
@@ -11,7 +11,7 @@ pub enum RoomResourceEvent {
 #[derive(Debug, Error)]
 pub enum RoomResourceReplyEvent {
     #[error("RoomResourceReply::GotRoomById raised with id {0} but channel is closed")]
-    GotRoomById(Id, RoomProxy),
+    GotRoomById(Id, Room),
     #[error("RoomResourceReply::NoRoomAtId raised with id {0} but channel is closed")]
     NoRoomAtId(Id),
 }
