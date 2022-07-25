@@ -16,7 +16,7 @@ use async_trait::async_trait;
 use std::collections::HashMap;
 use unique_id::{sequence::SequenceGenerator, Generator};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SessionResourceResolver {
     state: SessionResourceState,
 }
@@ -68,7 +68,7 @@ impl SessionResourceResolver {
 }
 
 #[readonly::make]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SessionResourceState {
     pub(crate) messengers: HashMap<Id, SessionMessenger>,
     pub(crate) id_gen: SequenceGenerator,

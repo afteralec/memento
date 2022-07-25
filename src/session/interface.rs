@@ -4,7 +4,8 @@ use super::{
 };
 use crate::{
     messaging::traits::{Interface, Raise},
-    room::interface::Room, player::interface::Player,
+    player::interface::Player,
+    room::interface::Room,
 };
 use anyhow::Result;
 

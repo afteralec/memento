@@ -55,7 +55,7 @@ pub struct RoomState {
 
 impl RoomState {
     pub fn new(room: &RoomData) -> Self {
-        let edge_ids = room.edges.to_slice().map(|edge| edge.map(|id| Id(id)));
+        let edge_ids = room.edges.to_slice().map(|edge| edge.map(Id));
 
         RoomState {
             id: Id(room.id),

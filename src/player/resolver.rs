@@ -1,5 +1,10 @@
 use super::{data::PlayerData, event::PlayerEvent, types::PlayerSink};
-use crate::{keywords::util::Keywords, messaging::traits::{Resolver, Raise}, session::interface::Session, Id};
+use crate::{
+    keywords::util::Keywords,
+    messaging::traits::{Raise, Resolver},
+    session::interface::Session,
+    Id,
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use futures::SinkExt;
@@ -68,7 +73,7 @@ impl PlayerState {
             names: HashMap::new(),
             // @TODO: Get this to load instead of being fresh on login
             keywords: Keywords::new(),
-            current_actor_id: player.current_actor_id.map(|id| Id(id)),
+            current_actor_id: player.current_actor_id.map(Id),
             session: None,
             sink: None,
         }

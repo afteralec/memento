@@ -1,5 +1,6 @@
 use super::{super::interface::Player, types::PlayerResourceReplySender};
 use crate::Id;
+use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -13,7 +14,7 @@ pub enum PlayerResourceEvent {
 #[derive(Debug, Error)]
 pub enum PlayerResourceReplyEvent {
     #[error("PlayerResourceReply::GotPlayerById raised with id {0} but channel is closed")]
-    GotPlayerById(Id, Player),
+    GotPlayerById(Id, Arc<Player>),
     #[error("PlayerResourceReply::PlayerDetached raised with id {0} but channel is closed")]
     PlayerDetached(Id),
     #[error("PlayerResourceReply::PlayerAlreadyDetached raised with id {0} but channel is closed")]

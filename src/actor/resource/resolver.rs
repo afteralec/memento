@@ -8,11 +8,12 @@ use crate::{
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
+#[readonly::make]
 #[derive(Debug)]
 pub struct ActorResourceResolver {
-    state: ActorResourceState,
+    pub(crate) state: ActorResourceState,
 }
 
 #[async_trait]
@@ -22,7 +23,7 @@ impl Resolver<ActorResourceEvent> for ActorResourceResolver {
             ActorResourceEvent::GetActorById(id, reply_sender) => {
                 if let Some(actor) = self.state.messengers.get(&id) {
                     reply_sender
-                        .send(ActorResourceReplyEvent::GotActorById(id, actor.provide()))?;
+                        .send(ActorResourceReplyEvent::GotActorById(id, Arc::new(actor.provide())))?;
                 } else {
                     reply_sender.send(ActorResourceReplyEvent::NoActorAtId(id))?;
                 }
@@ -47,10 +48,11 @@ impl ActorResourceResolver {
     }
 }
 
+#[readonly::make]
 #[derive(Debug)]
 pub struct ActorResourceState {
-    actors: HashMap<Id, ActorData>,
-    messengers: HashMap<Id, ActorMessenger>,
+    pub(crate) actors: HashMap<Id, ActorData>,
+    pub(crate) messengers: HashMap<Id, ActorMessenger>,
 }
 
 impl ActorResourceState {

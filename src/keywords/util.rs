@@ -2,21 +2,11 @@ use std::{collections::HashMap, default::Default};
 
 use crate::Id;
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct Keywords {
     pub ids_by_keyword: HashMap<String, Vec<Id>>,
     pub keywords_by_id: HashMap<Id, Vec<String>>,
     pub sdesc_by_id: HashMap<Id, String>,
-}
-
-impl Default for Keywords {
-    fn default() -> Self {
-        Keywords {
-            ids_by_keyword: HashMap::new(),
-            keywords_by_id: HashMap::new(),
-            sdesc_by_id: HashMap::new(),
-        }
-    }
 }
 
 impl Keywords {

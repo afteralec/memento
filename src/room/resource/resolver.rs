@@ -10,11 +10,12 @@ use crate::{
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use std::{collections::HashMap, iter::Iterator};
+use std::{collections::HashMap, iter::Iterator, sync::Arc};
 
+#[readonly::make]
 #[derive(Debug)]
 pub struct RoomResourceResolver {
-    state: RoomResourceState,
+    pub(crate) state: RoomResourceState,
 }
 
 #[async_trait]
@@ -24,7 +25,7 @@ impl Resolver<RoomResourceEvent> for RoomResourceResolver {
             RoomResourceEvent::GetRoomById(id, reply_sender) => {
                 if let Some(messenger) = self.state.messengers.get(&id) {
                     reply_sender
-                        .send(RoomResourceReplyEvent::GotRoomById(id, messenger.provide()))?;
+                        .send(RoomResourceReplyEvent::GotRoomById(id, Arc::new(messenger.provide())))?;
                 } else {
                     reply_sender.send(RoomResourceReplyEvent::NoRoomAtId(id))?;
                 }
@@ -57,10 +58,11 @@ impl RoomResourceResolver {
     }
 }
 
+#[readonly::make]
 #[derive(Debug)]
 pub struct RoomResourceState {
-    rooms: HashMap<Id, RoomData>,
-    messengers: HashMap<Id, RoomMessenger>,
+    pub(crate) rooms: HashMap<Id, RoomData>,
+    pub(crate) messengers: HashMap<Id, RoomMessenger>,
 }
 
 impl DetachAll for RoomResourceState {
@@ -80,10 +82,10 @@ impl RoomResourceState {
             |(mut rooms, mut messengers), room| {
                 let name = format!("room {}", &room.id);
                 messengers.insert(
-                    Id(room.id.clone()),
+                    Id(room.id),
                     RoomMessenger::new(&name, RoomResolver::new(&room)),
                 );
-                rooms.insert(Id(room.id.clone()), room);
+                rooms.insert(Id(room.id), room);
                 (rooms, messengers)
             },
         );

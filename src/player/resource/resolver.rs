@@ -8,7 +8,7 @@ use crate::{
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 #[derive(Debug)]
 pub struct PlayerResourceResolver {
@@ -23,7 +23,7 @@ impl Resolver<PlayerResourceEvent> for PlayerResourceResolver {
                 if let Some(player) = self.state.messengers.get(&id) {
                     reply_sender.send(PlayerResourceReplyEvent::GotPlayerById(
                         id,
-                        player.provide(),
+                        Arc::new(player.provide()),
                     ))?;
                 } else {
                     reply_sender.send(PlayerResourceReplyEvent::NoPlayerAtId(id))?;
@@ -64,10 +64,11 @@ impl PlayerResourceResolver {
     }
 }
 
+#[readonly::make]
 #[derive(Debug)]
 pub struct PlayerResourceState {
-    players: HashMap<Id, PlayerData>,
-    messengers: HashMap<Id, PlayerMessenger>,
+    pub(crate) players: HashMap<Id, PlayerData>,
+    pub(crate) messengers: HashMap<Id, PlayerMessenger>,
 }
 
 impl PlayerResourceState {

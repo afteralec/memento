@@ -5,7 +5,7 @@ use super::{
 };
 use crate::{
     messaging::traits::{Interface, Raise},
-    player::{interface::Player},
+    player::interface::Player,
     Id,
 };
 use anyhow::{Error, Result};

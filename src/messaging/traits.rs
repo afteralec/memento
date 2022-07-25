@@ -34,23 +34,6 @@ pub trait DetachAll {
     fn detach_all(&mut self) -> Result<()>;
 }
 
-pub trait Proxy<T>
-where
-    T: 'static + Send + Sync + Debug,
-{
-    fn proxy(proxied: &T) -> Self;
-}
-
-pub trait ProvideProxy<T>
-where
-    Self: 'static + Send + Sync + Sized + Debug,
-    T: 'static + Send + Sync + Debug + Proxy<Self>,
-{
-    fn proxy(&self) -> T {
-        T::proxy(&self)
-    }
-}
-
 pub trait Interface<T>
 where
     T: 'static + Send + Sync + Debug,
@@ -64,6 +47,6 @@ where
     I: 'static + Send + Sync + Debug + Interface<Self>,
 {
     fn provide(&self) -> I {
-        I::of(&self)
+        I::of(self)
     }
 }

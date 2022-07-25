@@ -4,19 +4,10 @@ use crate::{
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use std::default::Default;
 
 #[derive(Debug)]
 pub struct StreamResolver {
     state: StreamState,
-}
-
-impl Default for StreamResolver {
-    fn default() -> Self {
-        StreamResolver {
-            state: StreamState::default(),
-        }
-    }
 }
 
 #[async_trait]
@@ -45,12 +36,6 @@ impl StreamResolver {
 #[derive(Debug)]
 pub struct StreamState {
     session: Option<Session>,
-}
-
-impl Default for StreamState {
-    fn default() -> Self {
-        StreamState { session: None }
-    }
 }
 
 impl StreamState {

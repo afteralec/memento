@@ -15,7 +15,7 @@ use crate::{
 };
 use anyhow::{Error, Result};
 use futures::{SinkExt, StreamExt};
-use std::net::SocketAddr;
+use std::{net::SocketAddr};
 use tokio::{net::TcpStream, sync::oneshot};
 use tokio_util::codec::{Framed, LinesCodec};
 

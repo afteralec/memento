@@ -37,7 +37,7 @@ impl Interface<PlayerMessenger> for Player {
             id: state.id,
             names: state.names.clone(),
             keywords: state.keywords.clone(),
-            current_actor_id: state.current_actor_id.clone(),
+            current_actor_id: state.current_actor_id,
             sender: m.sender.clone(),
         }
     }

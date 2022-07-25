@@ -1,5 +1,6 @@
 use super::{super::interface::Room, types::RoomResourceReplySender};
 use crate::Id;
+use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -11,7 +12,7 @@ pub enum RoomResourceEvent {
 #[derive(Debug, Error)]
 pub enum RoomResourceReplyEvent {
     #[error("RoomResourceReply::GotRoomById raised with id {0} but channel is closed")]
-    GotRoomById(Id, Room),
+    GotRoomById(Id, Arc<Room>),
     #[error("RoomResourceReply::NoRoomAtId raised with id {0} but channel is closed")]
     NoRoomAtId(Id),
 }

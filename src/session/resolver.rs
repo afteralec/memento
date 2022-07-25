@@ -3,7 +3,7 @@ use crate::{messaging::traits::Resolver, player::interface::Player, room::interf
 use anyhow::Result;
 use async_trait::async_trait;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SessionResolver {
     state: SessionState,
 }
@@ -45,7 +45,7 @@ impl SessionResolver {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SessionState {
     room: Option<Room>,
     player: Option<Player>,
@@ -53,7 +53,10 @@ pub struct SessionState {
 
 impl SessionState {
     pub fn new() -> Self {
-        SessionState { room: None, player: None, }
+        SessionState {
+            room: None,
+            player: None,
+        }
     }
 
     pub fn set_room(&mut self, room: Room) {
